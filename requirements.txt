@@ -1,11 +1,11 @@
 streamlit
-numpy
 pandas
+numpy
 matplotlib
 seaborn
 folium
 streamlit-folium
-joblib
-tensorflow
-xgboost
 scikit-learn
+joblib
+xgboost
+tensorflow-cpu==2.12.0
