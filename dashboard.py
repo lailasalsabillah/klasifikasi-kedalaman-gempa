@@ -18,8 +18,12 @@ st.set_page_config(
 # ============================
 # SESSION STATE PAGE MANAGER
 # ============================
-if "page" not in st.session_state:
-    st.session_state.page = "home"
+if "selected_menu" not in st.session_state:
+    st.session_state.selected_menu = "Home 🏠"
+
+# Fungsi untuk mengubah menu saat tombol ditekan
+def set_menu(menu_name):
+    st.session_state.selected_menu = menu_name
 
 # ============================
 # LOAD MODEL
@@ -32,7 +36,6 @@ try:
     lstm_ok = True
 except:
     lstm_ok = False
-
 
 label_map = {
     0: "Shallow (<70 km)",
@@ -49,14 +52,14 @@ danger_map = {
 # ============================
 # SIDEBAR
 # ============================
-# ============================
-# SIDEBAR
-# ============================
 st.sidebar.title("🌋 Prediksi Kedalaman Gempa")
 
-# tombol ganti halaman
-if st.sidebar.button("🏠 Ke Beranda"):
-    st.session_state.page = "home"
+# Tombol Sidebar untuk navigasi menu
+if st.sidebar.button("Home 🏠", use_container_width=True):
+    set_menu("Home 🏠")
+
+if st.sidebar.button("Prediksi 📊", use_container_width=True):
+    set_menu("Prediksi 📊")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🔍 Input Parameter Gempa (Slider Version)")
@@ -72,9 +75,9 @@ depthError = st.sidebar.slider("Depth Error", 0.0, 20.0, 6.0)
 magError = st.sidebar.slider("Magnitude Error", 0.0, 1.0, 0.12)
 year = st.sidebar.slider("Year", 2020, 2024, 2023)
 
-# tombol prediksi
-if st.sidebar.button("➡ Tampilkan Prediksi"):
-    st.session_state.page = "result"
+# Tombol untuk menampilkan prediksi (akan mengubah ke menu Prediksi)
+if st.sidebar.button("➡ Tampilkan Prediksi", use_container_width=True):
+    set_menu("Prediksi 📊")
 
 # ============================
 # FUNCTION PREDICT
@@ -90,19 +93,28 @@ def predict_models():
     xgb_pred = xgb_model.predict(data_scaled)[0]
 
     if lstm_ok:
-        lstm_input = data_scaled.reshape((1,1, data_scaled.shape[1]))
+        lstm_input = data_scaled.reshape((1, 1, data_scaled.shape[1]))
         lstm_pred = np.argmax(lstm_model.predict(lstm_input), axis=1)[0]
     else:
         lstm_pred = None
 
     return data, xgb_pred, lstm_pred
 
+# --- Tampilan Konten Berdasarkan Menu ---
+st.title(st.session_state.selected_menu)
 
-# ============================
-# PAGE: HOME
-# ============================
-if st.session_state.page == "home":
-
+if st.session_state.selected_menu == "Home 🏠":
+    st.markdown(
+        """
+        <style>
+        .stApp{
+            background-color: #d0eced; /* Warna latar belakang */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
     st.title("🌋 Prediksi Kedalaman Gempa Bumi")
     st.write("""
     Selamat datang di aplikasi prediksi kedalaman gempa bumi.
@@ -110,12 +122,18 @@ if st.session_state.page == "home":
     Klik **➡ Tampilkan Prediksi** di sidebar untuk melakukan prediksi berdasarkan parameter yang kamu masukkan.
     """)
 
-
-# ============================
-# PAGE: RESULT (HASIL PREDIKSI)
-# ============================
-elif st.session_state.page == "result":
-
+elif st.session_state.selected_menu == "Prediksi 📊":
+    st.markdown(
+        """
+        <style>
+        .stApp{
+            background-color: #d0eced; /* Warna latar belakang */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
     st.title("📊 Hasil Prediksi Kedalaman Gempa")
 
     data, xgb_pred, lstm_pred = predict_models()
@@ -175,7 +193,7 @@ elif st.session_state.page == "result":
     # GRAPH
     # ============================
     st.subheader("📈 Grafik Magnitudo")
-    fig, ax = plt.subplots(figsize=(5,3))
+    fig, ax = plt.subplots(figsize=(5, 3))
     ax.bar(["Magnitude"], [mag], color="purple")
     st.pyplot(fig)
 
