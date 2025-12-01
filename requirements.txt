@@ -3,9 +3,9 @@ numpy
 pandas
 matplotlib
 seaborn
+folium
+streamlit-folium
 joblib
 tensorflow
 xgboost
-folium
-streamlit-folium
 scikit-learn
