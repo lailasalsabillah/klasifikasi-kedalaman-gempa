@@ -50,26 +50,13 @@ import tensorflow as tf
 np.random.seed(42)
 tf.random.set_seed(42)
 
-"""# **2. MOUNT DRIVE**
-
-
-Digunakan untuk mengakses dataset yang tersimpan di Google Drive. Bagian ini hanya diperlukan jika notebook dijalankan menggunakan Google Colab.
-"""
-
-from google.colab import drive
-drive.mount('/content/drive')
-
-
-# Ganti path dataset
-data_path = "/content/drive/MyDrive/Dataset_gempabumi.csv"
-
 """# **3. LOAD DATASET**
 
 
 Dataset dibaca menggunakan `pandas.read_csv()`. Kolom waktu dikonversi ke format datetime agar bisa diekstrak tahun dan dianalisis lebih lanjut.
 """
 
-df = pd.read_csv(data_path)
+pd.read_csv("dataset_gempa.csv")
 
 # Konversi kolom waktu ke datetime
 df["time"] = pd.to_datetime(df["time"], errors="coerce")
