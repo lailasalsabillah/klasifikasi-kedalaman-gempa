@@ -5,7 +5,7 @@ from streamlit_folium import st_folium
 
 st.title("🗺️ Peta Lokasi Gempa")
 
-df = pd.read_csv("dataset-gempa.csv")
+df = pd.read_csv("dataset_gempa.csv")
 
 m = folium.Map(location=[-2, 120], zoom_start=5)
 
