@@ -49,6 +49,9 @@ danger_map = {
 # ============================
 # SIDEBAR
 # ============================
+# ============================
+# SIDEBAR
+# ============================
 st.sidebar.title("🌋 Prediksi Kedalaman Gempa")
 
 # tombol ganti halaman
@@ -56,20 +59,20 @@ if st.sidebar.button("🏠 Ke Beranda"):
     st.session_state.page = "home"
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🔍 Input Parameter Gempa")
+st.sidebar.subheader("🔍 Input Parameter Gempa (Slider Version)")
 
-latitude = st.sidebar.number_input("Latitude", -12.0, 10.0, -2.0)
-longitude = st.sidebar.number_input("Longitude", 90.0, 150.0, 120.0)
-mag = st.sidebar.number_input("Magnitude", 3.0, 9.0, 4.5)
-gap = st.sidebar.number_input("Gap", 0, 300, 80)
-dmin = st.sidebar.number_input("Dmin", 0.0, 30.0, 2.1)
-rms = st.sidebar.number_input("RMS", 0.0, 3.0, 0.7)
-horizontalError = st.sidebar.number_input("Horizontal Error", 0.0, 30.0, 8.0)
-depthError = st.sidebar.number_input("Depth Error", 0.0, 20.0, 6.0)
-magError = st.sidebar.number_input("Magnitude Error", 0.0, 1.0, 0.12)
-year = st.sidebar.number_input("Year", 2020, 2024, 2023)
+latitude = st.sidebar.slider("Latitude", -12.0, 10.0, -2.0)
+longitude = st.sidebar.slider("Longitude", 90.0, 150.0, 120.0)
+mag = st.sidebar.slider("Magnitude", 3.0, 9.0, 4.5)
+gap = st.sidebar.slider("Gap", 0, 300, 80)
+dmin = st.sidebar.slider("Dmin", 0.0, 30.0, 2.1)
+rms = st.sidebar.slider("RMS", 0.0, 3.0, 0.7)
+horizontalError = st.sidebar.slider("Horizontal Error", 0.0, 30.0, 8.0)
+depthError = st.sidebar.slider("Depth Error", 0.0, 20.0, 6.0)
+magError = st.sidebar.slider("Magnitude Error", 0.0, 1.0, 0.12)
+year = st.sidebar.slider("Year", 2020, 2024, 2023)
 
-# tombol prediksi → pindah halaman result
+# tombol prediksi
 if st.sidebar.button("➡ Tampilkan Prediksi"):
     st.session_state.page = "result"
 
