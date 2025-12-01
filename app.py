@@ -18,5 +18,6 @@ Gunakan menu Sidebar di kiri (📑 Pages) untuk:
 - 📥 Mengunduh Hasil Prediksi  
 
 Aplikasi ini memanfaatkan dataset gempa 2020–2024 dan memprediksi kategori kedalaman:  
-**Shallow (<70 km)**, **Intermediate (70–300 km)**, dan **Deep (>300 km)**.
-""")
+- Shallow (<70 km)
+- Intermediate (70–300 km)
+- Deep (>300 km)
