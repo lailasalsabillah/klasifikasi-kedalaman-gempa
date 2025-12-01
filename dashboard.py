@@ -1,70 +1,22 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
 import numpy as np
+import pandas as pd
 import joblib
+import matplotlib.pyplot as plt
 
-# ==================================
-# CONFIGURATIONS
-# ==================================
-st.set_page_config(page_title="Earthquake Depth Classification", layout="wide")
+# ============================
+# PAGE CONFIG
+# ============================
+st.set_page_config(
+    page_title="Prediksi Kedalaman Gempa",
+    layout="wide",
+    page_icon="🌋"
+)
 
-# ==================================
-# CSS (Background, Buttons, Styles)
-# ==================================
-home_bg = """
-<style>
-[data-testid="stAppViewContainer"] {
-    background-image: url('https://raw.githubusercontent.com/lailasalsabillah/earthquake-depth-classification/main/background_gempa.jpeg');
-    background-size: cover;
-    background-position: center;
-}
-</style>
-"""
-
-result_bg = """
-<style>
-[data-testid="stAppViewContainer"] {
-    background: #ffffff !important;
-}
-</style>
-"""
-
-# Style card hasil
-st.markdown("""
-<style>
-.result-card {
-    background: #f8f9fa;
-    padding: 25px;
-    border-radius: 15px;
-    border: 1px solid #dee2e6;
-}
-.pred-label {
-    font-size: 22px;
-    font-weight: 700;
-}
-.small-note {
-    color: #6c757d;
-    font-size: 14px;
-}
-.back-button {
-    padding: 10px 20px;
-    background: #198754;
-    color: white !important;
-    border-radius: 10px;
-    text-decoration: none;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ==================================
-# SESSION STATE
-# ==================================
-if "page" not in st.session_state:
-    st.session_state.page = "home"
-
-# ==================================
+# ============================
 # LOAD MODEL
-# ==================================
+# ============================
 scaler = joblib.load("models/scaler.pkl")
 model = joblib.load("models/xgb_depth_class.pkl")
 
@@ -74,10 +26,16 @@ label_map = {
     2: "Deep (>300 km)"
 }
 
-# ==================================
+danger_map = {
+    0: ("Bahaya Tinggi", "red"),
+    1: ("Bahaya Sedang", "orange"),
+    2: ("Bahaya Rendah", "blue")
+}
+
+# ============================
 # SIDEBAR INPUT
-# ==================================
-st.sidebar.header("Masukkan Parameter Gempa")
+# ============================
+st.sidebar.title("🔍 Input Parameter Gempa Bumi")
 
 latitude = st.sidebar.number_input("Latitude", -12.0, 10.0, -2.0)
 longitude = st.sidebar.number_input("Longitude", 90.0, 150.0, 120.0)
@@ -90,13 +48,11 @@ depthError = st.sidebar.number_input("Depth Error", 0.0, 20.0, 6.0)
 magError = st.sidebar.number_input("Magnitude Error", 0.0, 1.0, 0.12)
 year = st.sidebar.number_input("Year", 2020, 2024, 2023)
 
-# tombol prediksi
-if st.sidebar.button("🔍 Prediksi Kedalaman Gempa ➜"):
-    st.session_state.page = "result"
+predict_btn = st.sidebar.button("🔎 Prediksi Kedalaman Gempa")
 
-# ==================================
+# ============================
 # FUNCTION PREDICT
-# ==================================
+# ============================
 def predict_depth():
     data = np.array([[
         latitude, longitude, mag, gap, dmin, rms,
@@ -105,46 +61,47 @@ def predict_depth():
 
     scaled = scaler.transform(data)
     pred = model.predict(scaled)[0]
-    return pred
+    return pred, data
 
-# ==================================
-# PAGE 1: HOMEPAGE
-# ==================================
-if st.session_state.page == "home":
-    st.markdown(home_bg, unsafe_allow_html=True)
+# ============================
+# TITLE
+# ============================
+st.title("🌋 Prediksi Kedalaman Gempa Bumi")
+st.write("Aplikasi prediksi kedalaman gempa berdasarkan parameter seismik menggunakan model **XGBoost**.")
 
-    st.markdown("""
-        <div style="background: rgba(255,255,255,0.9);
-                    padding: 40px;
-                    border-radius: 20px;
-                    margin-top: 100px;
-                    text-align: center;">
-            <h1><b>Klasifikasi Kedalaman Gempa Bumi</b> 🌋</h1>
-            <p>Aplikasi ini memprediksi apakah gempa tergolong 
-            <b>Shallow</b>, <b>Intermediate</b>, atau <b>Deep</b>
-            berdasarkan parameter seismik.</p>
-            <p>Masukkan data pada sidebar, lalu klik tombol prediksi.</p>
-        </div>
-    """, unsafe_allow_html=True)
+st.markdown("---")
 
-# ==================================
-# PAGE 2: HASIL PREDIKSI
-# ==================================
-elif st.session_state.page == "result":
-    st.markdown(result_bg, unsafe_allow_html=True)
-    st.header("📊 Hasil Prediksi Kedalaman Gempa")
+# ============================
+# RESULT PAGE
+# ============================
+if predict_btn:
 
-    pred = predict_depth()
+    pred, data = predict_depth()
+    depth_label = label_map[pred]
+    bahaya, color = danger_map[pred]
 
-    color = "#dc3545" if pred == 0 else ("#ffc107" if pred == 1 else "#0d6efd")
+    # Convert input to DataFrame
+    df_input = pd.DataFrame(data, columns=[
+        "Latitude", "Longitude", "Magnitude", "Gap", "Dmin",
+        "RMS", "HorizontalError", "DepthError", "MagError", "Year"
+    ])
+
+    # ============================
+    # 1. CARD HASIL PREDIKSI
+    # ============================
+    st.subheader("📊 Hasil Prediksi Kedalaman Gempa")
 
     st.markdown(
         f"""
-        <div class="result-card">
-            <div class="pred-label" style="color:{color};">
-                {label_map[pred]}
-            </div>
-            <p class="small-note">(Prediksi berdasarkan model XGBoost)</p>
+        <div style="
+            padding: 22px; 
+            border-radius: 12px; 
+            background-color: #f8f9fa;
+            border-left: 12px solid {color};">
+            <h3 style="margin: 0; color:{color};">{depth_label}</h3>
+            <p style="font-size: 16px; margin-top: 8px;">
+                (Prediksi berdasarkan model <b>XGBoost</b>)
+            </p>
         </div>
         """,
         unsafe_allow_html=True
@@ -152,5 +109,34 @@ elif st.session_state.page == "result":
 
     st.markdown("---")
 
-    if st.button("⬅️ Kembali ke Beranda"):
-        st.session_state.page = "home"
+    # ============================
+    # 2. GRAFIK VISUALISASI
+    # ============================
+    st.subheader("📈 Visualisasi Magnitude vs Tingkat Bahaya")
+
+    fig, ax = plt.subplots(figsize=(5,3))
+    ax.bar(["Magnitude"], [mag], color=color)
+    ax.set_ylabel("Magnitude (M)")
+    ax.set_title("Magnitude dari Gempa yang Diprediksi")
+    st.pyplot(fig)
+
+    st.markdown("---")
+
+    # ============================
+    # 3. TABEL PARAMETER INPUT
+    # ============================
+    st.subheader("🧾 Tabel Parameter Gempa yang Dimasukkan")
+    st.dataframe(df_input, use_container_width=True)
+
+    # ============================
+    # 4. INFORMASI TAMBAHAN
+    # ============================
+    st.markdown("### ℹ Penjelasan Kategori Kedalaman Gempa")
+    st.write("""
+    **Shallow (<70 km)** → Sangat berbahaya karena energi belum banyak meredam.  
+    **Intermediate (70–300 km)** → Bahaya sedang dan masih dirasakan di wilayah luas.  
+    **Deep (>300 km)** → Energi sudah banyak teredam sehingga bahaya lebih rendah.
+    """)
+
+else:
+    st.info("Masukkan parameter di sidebar, lalu klik **Prediksi Kedalaman Gempa**.")
