@@ -1,12 +1,22 @@
 import streamlit as st
 
-st.set_page_config(page_title="Prediksi Kedalaman Gempa", layout="wide")
+st.set_page_config(
+    page_title="Prediksi Kedalaman Gempa",
+    page_icon="🌋",
+    layout="wide"
+)
 
-st.title("🌋 Prediksi Kedalaman Gempa Bumi")
+st.title("🌋 Sistem Prediksi Kedalaman Gempa Bumi")
 st.write("""
-Aplikasi ini memprediksi kategori kedalaman gempa (Shallow, Intermediate, Deep)
-berdasarkan model **XGBoost** dan **LSTM**.
-Gunakan menu di sidebar untuk membuka halaman lain.
-""")
+Selamat datang di aplikasi **Prediksi Kedalaman Gempa Bumi** yang dibangun menggunakan model  
+**LSTM** dan **XGBoost**.
 
-st.info("Pilih halaman *Prediksi Gempa*, *Visualisasi Data*, *Peta Lokasi*, atau *Unduh Hasil* melalui sidebar.")
+Gunakan menu Sidebar di kiri (📑 Pages) untuk:
+- ⚡ Melakukan Prediksi Kedalaman Gempa  
+- 📊 Melihat Visualisasi Data  
+- 🗺️ Melihat Peta Lokasi Gempa  
+- 📥 Mengunduh Hasil Prediksi  
+
+Aplikasi ini memanfaatkan dataset gempa 2020–2024 dan memprediksi kategori kedalaman:  
+**Shallow (<70 km)**, **Intermediate (70–300 km)**, dan **Deep (>300 km)**.
+""")
