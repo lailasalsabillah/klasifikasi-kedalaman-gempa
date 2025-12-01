@@ -3,14 +3,24 @@ import pandas as pd
 
 st.title("📥 Unduh Dataset atau Hasil Prediksi")
 
-df = pd.read_csv("dataset_gempa.csv")
+@st.cache_data
+def load_dataset():
+    try:
+        df = pd.read_csv("dataset_gempa.csv")
+        return df, None
+    except Exception as e:
+        return None, str(e)
 
-# Download dataset lengkap
-st.download_button(
-    "Download Dataset Gempa (CSV)",
-    df.to_csv(index=False),
-    "dataset_gempa.csv",
-    "text/csv"
-)
+df, err = load_dataset()
 
-st.info("Hasil prediksi juga dapat diunduh dari halaman Prediksi Gempa.")
+if err:
+    st.error("Dataset tidak ditemukan.")
+else:
+    csv_bytes = df.to_csv(index=False).encode("utf-8")
+
+    st.download_button(
+        label="📥 Download Dataset Gempa (CSV)",
+        data=csv_bytes,
+        file_name="dataset_gempa.csv",
+        mime="text/csv",
+    )
