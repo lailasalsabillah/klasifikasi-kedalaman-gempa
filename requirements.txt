@@ -1,11 +1,7 @@
 streamlit
-numpy
 pandas
-matplotlib
-seaborn
-joblib
-tensorflow
-xgboost
-folium
-streamlit-folium
+numpy
 scikit-learn
+joblib
+xgboost
+altair
