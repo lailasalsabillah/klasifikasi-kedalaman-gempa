@@ -5,7 +5,7 @@ import seaborn as sns
 
 st.title("📊 Visualisasi Dataset Gempa")
 
-df = pd.read_csv("dataset_gempa.csv")
+df = pd.read_csv("dataset-gempa.csv")
 
 st.subheader("Distribusi Magnitude")
 fig1, ax1 = plt.subplots()
