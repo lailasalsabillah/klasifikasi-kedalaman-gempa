@@ -3,7 +3,7 @@ import pandas as pd
 
 st.title("📥 Unduh Dataset atau Hasil Prediksi")
 
-df = pd.read_csv("dataset/earthquake_dataset.csv")
+df = pd.read_csv("dataset_gempa.csv")
 
 # Download dataset lengkap
 st.download_button(
