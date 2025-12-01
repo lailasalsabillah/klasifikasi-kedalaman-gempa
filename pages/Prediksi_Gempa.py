@@ -31,7 +31,6 @@ with st.sidebar:
     herror = st.number_input("Horizontal Error", 0.0, 50.0, 8.0)
     derror = st.number_input("Depth Error", 0.0, 30.0, 6.0)
     magerr = st.number_input("Magnitude Error", 0.0, 1.0, 0.1)
-    year = st.number_input("Year", 2000, 2030, 2023)
 
     btn = st.button("Prediksi Gempa")
 
