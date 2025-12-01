@@ -1,110 +1,124 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
+import numpy as np
+import joblib
 
 st.set_page_config(
-    page_title="Klasifikasi Kedalaman Gempa",
-    page_icon="🌊",
+    page_title="Prediksi Kedalaman Gempa",
+    page_icon="🔮",
     layout="wide"
 )
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("dataset_gempa.csv")
-    # pastikan nama kolom sesuai
-    return df
+    return pd.read_csv("dataset_gempa.csv")
+
+@st.cache_resource
+def load_model():
+    # sesuaikan path model
+    model = joblib.load("models/xgb_depth_class.pkl")
+    return model
 
 df = load_data()
+model = load_model()
 
-st.title("📊 Dashboard Klasifikasi Kedalaman Gempa")
-st.markdown(
-    """
-Aplikasi ini menampilkan **visualisasi data gempa bumi** dan  
-**klasifikasi kedalaman gempa**: Shallow, Intermediate, dan Deep.
-"""
-)
-
-# ──────────────────────────────
-# Kartu Ringkasan
-# ──────────────────────────────
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.markdown("### Total Data")
-    st.metric(label="Jumlah gempa", value=len(df))
-
-with col2:
-    st.markdown("### Kedalaman Rata-rata")
-    kedalaman_mean = df["kedalaman"].mean()
-    st.metric(label="Rata-rata (km)", value=f"{kedalaman_mean:.1f}")
-
-with col3:
-    st.markdown("### Magnitudo Rata-rata")
-    mag_mean = df["magnitudo"].mean()
-    st.metric(label="Rata-rata M", value=f"{mag_mean:.2f}")
-
-with col4:
-    st.markdown("### Kelas Kedalaman")
-    kelas_counts = df["klasifikasi"].value_counts()
-    kelas_str = ", ".join([f"{k}: {v}" for k, v in kelas_counts.items()])
-    st.write(kelas_str)
-
-st.markdown("---")
-
-# ──────────────────────────────
-# Grafik distribusi klasifikasi
-# ──────────────────────────────
-st.subheader("Distribusi Klasifikasi Kedalaman")
-
-chart_kelas = (
-    alt.Chart(df)
-    .mark_bar()
-    .encode(
-        x=alt.X("klasifikasi:N", title="Klasifikasi Kedalaman"),
-        y=alt.Y("count():Q", title="Jumlah"),
-        tooltip=["klasifikasi", "count()"]
-    )
-)
-
-st.altair_chart(chart_kelas, use_container_width=True)
-
-st.markdown("---")
-
-# ──────────────────────────────
-# Peta lokasi gempa (jika ada)
-# ──────────────────────────────
-if {"lintang", "bujur"}.issubset(df.columns):
-    st.subheader("Peta Lokasi Gempa")
-
-    df_map = df.rename(columns={"lintang": "lat", "bujur": "lon"})
-    st.map(df_map[["lat", "lon"]].dropna())
-else:
-    st.info("Kolom lintang & bujur tidak ditemukan, peta tidak dapat ditampilkan.")
-
-st.markdown("---")
-
-# ──────────────────────────────
-# Grafik Magnitudo vs Kedalaman
-# ──────────────────────────────
-st.subheader("Magnitudo vs Kedalaman")
-
-scatter = (
-    alt.Chart(df)
-    .mark_circle(size=60)
-    .encode(
-        x=alt.X("magnitudo:Q", title="Magnitudo"),
-        y=alt.Y("kedalaman:Q", title="Kedalaman (km)"),
-        color=alt.Color("klasifikasi:N", title="Klasifikasi"),
-        tooltip=["tanggal", "jam", "wilayah", "magnitudo", "kedalaman", "klasifikasi"]
-    )
-    .interactive()
-)
-
-st.altair_chart(scatter, use_container_width=True)
+st.title("🔮 Prediksi Klasifikasi Kedalaman Gempa")
 
 st.markdown(
     """
-🔎 **Tips**:  
-- Gunakan menu di kiri (sidebar) untuk berpindah ke halaman **Prediksi Kedalaman** atau **Analisis Dataset**.
+Masukkan parameter gempa untuk memprediksi **kategori kedalaman**:  
+**Shallow (<70 km), Intermediate (70–300 km), atau Deep (>300 km).**
 """
 )
+
+# Ambil range dari dataset untuk membantu input
+mag_min, mag_max = float(df["magnitudo"].min()), float(df["magnitudo"].max())
+lat_min, lat_max = float(df["lintang"].min()), float(df["lintang"].max())
+lon_min, lon_max = float(df["bujur"].min()), float(df["bujur"].max())
+
+with st.form("form_prediksi"):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        magnitudo = st.slider(
+            "Magnitudo",
+            min_value=round(mag_min, 1),
+            max_value=round(mag_max, 1),
+            value=round(np.median(df["magnitudo"]), 1),
+            step=0.1,
+        )
+        lintang = st.slider(
+            "Lintang (°)",
+            min_value=float(lat_min),
+            max_value=float(lat_max),
+            value=float(np.median(df["lintang"])),
+            step=0.01,
+        )
+
+    with col2:
+        bujur = st.slider(
+            "Bujur (°)",
+            min_value=float(lon_min),
+            max_value=float(lon_max),
+            value=float(np.median(df["bujur"])),
+            step=0.01,
+        )
+        kedalaman_input = st.number_input(
+            "Perkiraan Kedalaman (km) (opsional, jika ingin diisi)",
+            min_value=0.0,
+            value=float(max(1.0, df["kedalaman"].median())),
+            step=1.0,
+            help="Jika model kamu TIDAK memakai fitur kedalaman, bisa diabaikan di kode."
+        )
+
+    submitted = st.form_submit_button("Prediksi Klasifikasi Kedalaman")
+
+if submitted:
+    # ============
+    # SESUAIKAN BAGIAN INI dengan fitur yang digunakan saat training model
+    # Misal kalau saat training hanya pakai [magnitudo, lintang, bujur]:
+    # features = np.array([[magnitudo, lintang, bujur]])
+    #
+    # Kalau pakai 4 fitur termasuk kedalaman:
+    # features = np.array([[magnitudo, lintang, bujur, kedalaman_input]])
+    # ============
+    try:
+        features = np.array([[magnitudo, lintang, bujur]])  # default: 3 fitur
+        pred = model.predict(features)[0]
+
+        # Jika model keluarkan angka 0/1/2 → mapping ke label
+        mapping = {
+            0: "Shallow (<70 km)",
+            1: "Intermediate (70–300 km)",
+            2: "Deep (>300 km)",
+            "Shallow": "Shallow (<70 km)",
+            "Intermediate": "Intermediate (70–300 km)",
+            "Deep": "Deep (>300 km)",
+        }
+
+        label = mapping.get(pred, str(pred))
+
+        st.success(f"📌 Hasil Prediksi Klasifikasi: **{label}**")
+
+        with st.expander("Detail Input"):
+            st.write(
+                {
+                    "magnitudo": magnitudo,
+                    "lintang": lintang,
+                    "bujur": bujur,
+                    "kedalaman_input": kedalaman_input,
+                }
+            )
+
+        st.markdown(
+            """
+**Interpretasi Umum:**
+
+- **Shallow (<70 km)** → biasanya lebih terasa di permukaan, berpotensi merusak.
+- **Intermediate (70–300 km)** → getaran dirasakan luas, tapi dampak di permukaan bisa beragam.
+- **Deep (>300 km)** → biasanya getaran luas namun efek permukaan lebih kecil.
+"""
+        )
+    except Exception as e:
+        st.error("Terjadi error saat memanggil model. Cek kembali urutan fitur yang digunakan.")
+        st.exception(e)
