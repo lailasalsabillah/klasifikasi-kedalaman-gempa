@@ -1,191 +1,107 @@
 import streamlit as st
+import numpy as np
 import pandas as pd
-import plotly.express as px
-import requests
-from datetime import datetime, timedelta
-import pytz
+import joblib
 
-# ================================
-# KONFIGURASI PAGE UTAMA
-# ================================
-st.set_page_config(
-    page_title="Deteksi Gempa Indonesia",
-    page_icon="🌍",
-    layout="wide"
-)
+# -------------------------------
+# TITLE
+# -------------------------------
+st.title("🌍 Prediksi Kategori Kedalaman Gempa")
+st.write("Model menggunakan XGBoost (versi ringan untuk Streamlit Cloud)")
 
-# Header Branding aplikasi (Tema Light Blue)
-st.markdown(
-    """
-    <h1 style='text-align: center; color:#0b5394;'>
-        🌍 Deteksi Gempa Bumi Indonesia
-    </h1>
-    <p style='text-align: center; font-size:18px; color:#444;'>
-        Monitoring gempa bumi real-time + Analisis & Prediksi Kedalaman Gempa
-    </p>
-    """,
-    unsafe_allow_html=True
-)
 
-# ================================
-# FUNGSI AMBIL DATA GEMPA USGS
-# ================================
-def fetch_usgs_indonesia_earthquakes():
-    """Mengambil data gempa dari USGS dengan filter area Indonesia"""
-    try:
-        url = "https://earthquake.usgs.gov/fdsnws/event/1/query"
-        params = {
-            'format': 'geojson',
-            'starttime': (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),
-            'endtime': datetime.now().strftime('%Y-%m-%d'),
-            'minlatitude': -11,
-            'maxlatitude': 6,
-            'minlongitude': 95,
-            'maxlongitude': 141,
-            'minmagnitude': 2.5,
-            'limit': 100
-        }
-        
-        response = requests.get(url, params=params, timeout=15)
-        response.raise_for_status()
-        
-        data = response.json()
-        earthquakes = []
-        
-        for feature in data['features']:
-            try:
-                properties = feature['properties']
-                geometry = feature['geometry']
-                
-                magnitude = properties.get('mag', 0)
-                place = properties.get('place', 'Unknown location')
-                time_ms = properties.get('time', 0)
-                depth = geometry['coordinates'][2] if len(geometry['coordinates']) > 2 else 0
-                
-                utc_time = pd.to_datetime(time_ms, unit='ms')
-                local_time = utc_time.tz_localize('UTC').tz_convert(pytz.timezone('Asia/Jakarta'))
+# -------------------------------
+# LOAD MODEL
+# -------------------------------
+scaler = joblib.load("models/scaler.pkl")
+xgb_model = joblib.load("models/xgb_depth_class.pkl")
 
-                earthquakes.append({
-                    "tanggal": local_time.strftime("%d-%b-%Y"),
-                    "jam": local_time.strftime("%H:%M:%S"),
-                    "lintang": geometry['coordinates'][1],
-                    "bujur": geometry['coordinates'][0],
-                    "magnitudo": magnitude,
-                    "kedalaman": int(depth),
-                    "wilayah": place,
-                    "potensi_tsunami": "Tidak berpotensi tsunami" if magnitude < 7.0 else "Berpotensi tsunami",
-                    "waktu_kejadian": local_time
-                })
-                
-            except:
-                continue
-        
-        return pd.DataFrame(earthquakes)
-        
-    except Exception:
-        st.error("Error mengambil data dari USGS. Menampilkan data contoh.")
-        return create_dummy_data()
+label_map = {
+    0: "Shallow (<70 km)",
+    1: "Intermediate (70–300 km)",
+    2: "Deep (>300 km)"
+}
 
-# ================================
-# DATA DUMMY (Backup)
-# ================================
-def create_dummy_data():
-    return pd.DataFrame([
-        {"tanggal": "16-Jun-2025", "jam": "10:30:00", "lintang": -6.2, "bujur": 106.8,
-         "magnitudo": 4.2, "kedalaman": 15, "wilayah": "Jakarta Selatan",
-         "potensi_tsunami": "Tidak berpotensi tsunami",
-         "waktu_kejadian": datetime.now(pytz.timezone('Asia/Jakarta'))},
-    ])
+# -------------------------------
+# FUNGSI PREDIKSI
+# -------------------------------
+def predict_depth(df):
+    scaled = scaler.transform(df)
+    pred = xgb_model.predict(scaled)[0]
+    return label_map[pred]
 
-# ================================
-# AMBIL DATA
-# ================================
-with st.spinner("📡 Mengambil data gempa..."):
-    earthquake_data = fetch_usgs_indonesia_earthquakes()
 
-st.markdown("---")
+# -------------------------------
+# INPUT MODE 1 – PREDIKSI DATA INDIVIDU
+# -------------------------------
+st.header("🔎 Prediksi Kedalaman Gempa (Input Satu Data)")
 
-# ================================
-# STATISTIK RINGKAS
-# ================================
-if not earthquake_data.empty:
-    col1, col2, col3, col4 = st.columns(4)
+col1, col2 = st.columns(2)
 
-    with col1:
-        st.metric("Total Gempa", len(earthquake_data))
+with col1:
+    latitude = st.number_input("Latitude", -20.0, 20.0, 0.0)
+    longitude = st.number_input("Longitude", 80.0, 150.0, 100.0)
+    mag = st.number_input("Magnitude", 3.0, 10.0, 5.0)
+    gap = st.number_input("Gap", 0, 300, 40)
+    dmin = st.number_input("Dmin", 0.0, 30.0, 2.0)
 
-    with col2:
-        st.metric("Magnitudo Tertinggi", f"{earthquake_data['magnitudo'].max():.1f}")
+with col2:
+    rms = st.number_input("RMS", 0.0, 3.0, 1.0)
+    herror = st.number_input("Horizontal Error", 0.0, 50.0, 5.0)
+    derror = st.number_input("Depth Error", 0.0, 30.0, 5.0)
+    magerr = st.number_input("Magnitude Error", 0.0, 1.0, 0.1)
+    year = st.number_input("Year", 2000, 2030, 2020)
 
-    with col3:
-        st.metric("Kedalaman Rata-rata", f"{earthquake_data['kedalaman'].mean():.1f} km")
 
-    with col4:
-        st.metric("Gempa M ≥ 4.0", len(earthquake_data[earthquake_data['magnitudo'] >= 4]))
+# Buat dataframe input
+input_df = pd.DataFrame([[
+    latitude, longitude, mag, gap, dmin,
+    rms, herror, derror, magerr, year
+]], columns=[
+    "latitude", "longitude", "mag", "gap", "dmin",
+    "rms", "horizontal_error", "depth_error", "mag_error", "year"
+])
 
-# ================================
-# FILTER MAGNITUDO
-# ================================
-st.subheader("Filter Data")
-min_magnitude = st.slider(
-    "Magnitudo Minimum",
-    min_value=float(earthquake_data['magnitudo'].min()),
-    max_value=float(earthquake_data['magnitudo'].max()),
-    value=2.5,
-    step=0.1
-)
+st.write("📘 **Data Input Anda:**")
+st.dataframe(input_df)
 
-filtered_data = earthquake_data[earthquake_data["magnitudo"] >= min_magnitude]
+if st.button("Prediksi Kedalaman Gempa"):
+    result = predict_depth(input_df)
+    st.success(f"📌 **Hasil Prediksi: {result}**")
 
-# ================================
-# PETA GEMPA
-# ================================
-st.subheader("🗺️ Peta Gempa Bumi Indonesia (7 Hari Terakhir)")
 
-if not filtered_data.empty:
-    fig = px.scatter_mapbox(
-        filtered_data,
-        lat="lintang",
-        lon="bujur",
-        size="magnitudo",
-        color="magnitudo",
-        hover_name="wilayah",
-        hover_data=["tanggal", "jam", "magnitudo", "kedalaman"],
-        zoom=4,
-        center={"lat": -2.5, "lon": 118},
-        height=600,
-        color_continuous_scale="Reds"
-    )
-    fig.update_layout(mapbox_style="open-street-map")
-    st.plotly_chart(fig, use_container_width=True)
-else:
-    st.info("Tidak ada gempa dengan magnitudo minimum tersebut.")
+# -------------------------------
+# INPUT MODE 2 – RENTANG PARAMETER (SIDEBAR)
+# -------------------------------
+with st.sidebar:
+    st.header("📊 Prediksi Dengan Rentang Parameter")
 
-# ================================
-# TABEL DATA
-# ================================
-st.subheader("📋 Data Gempa Terkini")
+    lat_range = st.slider("Latitude", -20.0, 20.0, (-10.0, 10.0))
+    lon_range = st.slider("Longitude", 80.0, 150.0, (100.0, 120.0))
+    mag_range = st.slider("Magnitude", 3.0, 10.0, (4.0, 6.0))
+    gap_range = st.slider("Gap", 0, 300, (20, 80))
+    dmin_range = st.slider("Dmin", 0.0, 30.0, (1.0, 5.0))
+    rms_range = st.slider("RMS", 0.0, 3.0, (0.5, 1.5))
+    herror_range = st.slider("Horizontal Error", 0.0, 50.0, (5.0, 10.0))
+    derror_range = st.slider("Depth Error", 0.0, 30.0, (3.0, 8.0))
+    magerr_range = st.slider("Magnitude Error", 0.0, 1.0, (0.05, 0.2))
+    year_range = st.slider("Year", 2000, 2030, (2015, 2025))
 
-display_data = filtered_data.sort_values("waktu_kejadian", ascending=False)
-st.dataframe(
-    display_data[['tanggal', 'jam', 'wilayah', 'magnitudo', 'kedalaman', 'potensi_tsunami']],
-    use_container_width=True,
-    height=350
-)
+    if st.button("Prediksi Dari Rentang"):
+        # Ambil nilai rata-rata dari range
+        data_avg = pd.DataFrame([[
+            np.mean(lat_range), np.mean(lon_range), np.mean(mag_range),
+            np.mean(gap_range), np.mean(dmin_range), np.mean(rms_range),
+            np.mean(herror_range), np.mean(derror_range),
+            np.mean(magerr_range), np.mean(year_range)
+        ]], columns=[
+            "latitude", "longitude", "mag", "gap", "dmin",
+            "rms", "horizontal_error", "depth_error", "mag_error", "year"
+        ])
 
-csv = display_data.to_csv(index=False)
-st.download_button("📥 Download Data CSV", csv, "gempa_indonesia.csv", "text/csv")
+        depth_res = predict_depth(data_avg)
 
-st.markdown("---")
-st.caption("Data oleh USGS — Aplikasi oleh Sistem Prediksi Kedalaman Gempa")
+        st.write("📘 **Data Rata-Rata Rentang:**")
+        st.dataframe(data_avg)
 
-# ================================
-# SIDEBAR NAVIGASI
-# ================================
-st.sidebar.title("📌 Navigasi")
-st.sidebar.page_link("app.py", label="🌍 Deteksi Gempa Indonesia")
-st.sidebar.page_link("pages/1_Prediksi_Kedalaman.py", label="🔮 Prediksi Kedalaman Gempa")
-st.sidebar.page_link("pages/2_Analisis_Dataset.py", label="📊 Analisis Dataset")
-st.sidebar.markdown("---")
-st.sidebar.info("Data real-time USGS area Indonesia.")
-
+        st.success(f"📌 **Hasil Prediksi Rentang: {depth_res}**")
