@@ -1,16 +1,9 @@
-# Earthquake Depth Classification (LSTM & XGBoost)
+# 📘 Klasifikasi Kedalaman Gempa Bumi Menggunakan LSTM & XGBoost
 
-Project ini melakukan klasifikasi kedalaman gempa bumi menjadi:
-- Shallow (<70 km)
-- Intermediate (70–300 km)
-- Deep (>300 km)
+Proyek ini bertujuan untuk melakukan **klasifikasi kedalaman gempa bumi** menjadi tiga kategori:
+- **Shallow** (< 70 km)  
+- **Intermediate** (70–300 km)  
+- **Deep** (> 300 km)  
 
-Menggunakan model:
-- LSTM (TensorFlow)
-- XGBoost
+Model dibangun menggunakan kombinasi **Long Short-Term Memory (LSTM)** dan **XGBoost**, dengan preprocessing fitur yang distandarkan menggunakan **StandardScaler**. Aplikasi prediksi dibuat menggunakan **Streamlit**, dan dapat dideploy melalui Streamlit Cloud.
 
-Terdapat 2 bagian utama dalam project:
-1. modeling.py → proses preprocessing, training, dan penyimpanan model (.pkl / .keras)
-2. dashboard.py → aplikasi Streamlit yang memanggil model dan membuat prediksi
-
-## Struktur Project
