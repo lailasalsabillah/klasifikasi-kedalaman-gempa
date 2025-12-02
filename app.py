@@ -35,7 +35,7 @@ CLASS_MAP = {
 }
 
 # Daftar tahun untuk dropdown
-YEARS = list(range(2000, 2031))  # 2000 - 2030
+YEARS = list(range(2020, 2024))  # 2000 - 2030
 
 # Nilai default fitur lain (tidak diinput user)
 DEFAULT_DMIN = 0.1
