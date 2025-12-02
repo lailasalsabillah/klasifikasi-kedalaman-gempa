@@ -232,7 +232,7 @@ with tab2:
     st.markdown("<div class='card'>",unsafe_allow_html=True)
     st.subheader("📈 Rata-rata Magnitudo per Tahun")
 
-    df_year_avg = df.groupby("year")["mag"].mean().reset_index()
+    df_year_avg = df.groupby("year")["depth"].mean().reset_index()
 
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(
@@ -248,7 +248,7 @@ with tab2:
         plot_bgcolor="#f4fefb",
         paper_bgcolor="#f4fefb",
         xaxis_title="Tahun",
-        yaxis_title="Magnitudo (Mw)"
+        yaxis_title="Kedalaman Rata-rata (km)"
     )
 
     st.plotly_chart(fig2,use_container_width=True)
