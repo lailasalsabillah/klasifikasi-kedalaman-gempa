@@ -283,7 +283,52 @@ with tab2:
         st.warning("Grafik muncul setelah prediksi dilakukan.")
 
     st.markdown("</div>", unsafe_allow_html=True)
+    
+    # ================================
+    # 🔵 HISTOGRAM KEDALAMAN
+    # ================================
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📊 Histogram Kedalaman Gempa")
 
+    fig_hist, ax = plt.subplots(figsize=(6,4))
+    sns.histplot(df["depth"], bins=30, kde=True, color="#457B9D", ax=ax)
+    ax.set_xlabel("Kedalaman (km)")
+    ax.set_ylabel("Frekuensi")
+    ax.set_title("Distribusi Kedalaman Gempa")
+    st.pyplot(fig_hist)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+    # ================================
+    # 🔵 SCATTER PLOT: KEDALAMAN vs MAGNITUDE
+    # ================================
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📌 Scatter Plot: Kedalaman vs Magnitudo")
+
+    fig_scatter, ax2 = plt.subplots(figsize=(6,4))
+    ax2.scatter(df["depth"], df["mag"], alpha=0.5, color="#E63946")
+    ax2.set_xlabel("Kedalaman (km)")
+    ax2.set_ylabel("Magnitudo")
+    ax2.set_title("Sebaran Kedalaman Terhadap Magnitudo")
+    st.pyplot(fig_scatter)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+    # ================================
+    # 🔵 BOXPLOT KEDALAMAN
+    # ================================
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📦 Boxplot Kedalaman Gempa")
+
+    fig_box, ax3 = plt.subplots(figsize=(5,4))
+    sns.boxplot(df["depth"], color="#A8DADC", ax=ax3)
+    ax3.set_xlabel("Kedalaman (km)")
+    ax3.set_title("Boxplot Sebaran Kedalaman Gempa")
+    st.pyplot(fig_box)
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================================
 # TAB 3 — INFO DATASET
