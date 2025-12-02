@@ -228,16 +228,16 @@ with tab2:
 
     st.markdown("</div>",unsafe_allow_html=True)
 
-    # Grafik Magnitudo per Tahun
+    # Grafik Kedalaman per Tahun
     st.markdown("<div class='card'>",unsafe_allow_html=True)
     st.subheader("📈 Kedalaman Rata-rata per Tahun")
 
-    df_year_avg = df.groupby("year")["depth"].mean().reset_index()
+    df_year_avg = df.groupby("year")["depthError"].mean().reset_index()
 
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(
         x=df_year_avg["year"],
-        y=df_year_avg["depth"],
+        y=df_year_avg["depthError"],
         mode="lines+markers",
         marker=dict(size=8,color="#16a085"),
         line=dict(color="#1abc9c",width=3)
@@ -255,7 +255,6 @@ with tab2:
     st.plotly_chart(fig2,use_container_width=True)
 
     st.markdown("</div>",unsafe_allow_html=True)
-
 
 # ============================================================
 # TAB 3 — INFO DATASET
