@@ -14,12 +14,13 @@ st.markdown("""
 <style>
 
 :root {
-    --primary-color: #E63946;      /* Earthquake Red */
-    --secondary-color: #457B9D;    /* Ash Blue */
-    --background: #F8F9FA;         /* Light Gray Background */
+    --primary-color: #E63946;      
+    --secondary-color: #457B9D;    
+    --accent-color: #A8DADC;
+    --background: #F8F9FA;         
     --card-bg: #FFFFFF;
     --card-border: #DDE5EC;
-    --text-dark: #1D3557;          /* Deep Navy Text */
+    --text-dark: #1D3557;          
     --radius: 18px;
 }
 
@@ -31,23 +32,29 @@ st.markdown("""
 /* Card Style */
 .card {
     background: var(--card-bg);
-    padding: 20px;
+    padding: 22px;
     border-radius: var(--radius);
     border: 1.5px solid var(--card-border);
-    box-shadow: 0px 4px 14px rgba(0,0,0,0.05);
-    margin-bottom: 20px;
+    box-shadow: 0px 8px 20px rgba(0,0,0,0.06);
+    transition: 0.3s;
+}
+
+/* Card Hover */
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0px 12px 26px rgba(0,0,0,0.1);
 }
 
 /* Header Title */
 .header-title {
-    font-size: 38px;
-    font-weight: 800;
+    font-size: 42px;
+    font-weight: 900;
     color: var(--text-dark);
     text-align: center;
     margin-bottom: 5px;
 }
 
-/* Subheader subtitle */
+/* Subheader Title */
 .header-sub {
     font-size: 18px;
     text-align: center;
@@ -55,12 +62,12 @@ st.markdown("""
     margin-bottom: 25px;
 }
 
-/* Styled Divider */
+/* Divider */
 .divider {
     height: 3px;
-    background: linear-gradient(90deg,var(--primary-color),transparent);
-    margin: 15px 0;
-    border-radius: 20px;
+    background: linear-gradient(90deg, var(--primary-color), transparent);
+    margin: 20px 0;
+    border-radius: 15px;
 }
 
 /* Buttons */
@@ -68,30 +75,41 @@ st.markdown("""
     background-color: var(--primary-color);
     color:white;
     border-radius:var(--radius);
-    padding:10px 16px;
+    padding:12px 20px;
     border:none;
-    transition:0.2s;
+    font-size: 16px;
+    transition: 0.25s;
 }
 .stButton button:hover {
     background-color: var(--secondary-color);
-    transform:scale(1.03);
+    transform:scale(1.05);
 }
 
-/* Result Badge */
+/* Badge Styling */
 .badge {
     display:inline-block;
-    padding:6px 14px;
+    padding:10px 20px;
     border-radius:14px;
     color:white;
-    font-weight:600;
+    font-weight:700;
+    font-size:18px;
+    box-shadow:0px 4px 10px rgba(0,0,0,0.15);
 }
 .badge-0 { background:#E63946; }
-.badge-1 { background:#F1C40F; }
+.badge-1 { background:#F1C40F; color:#333; }
 .badge-2 { background:#2ECC71; }
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    from {opacity:0; transform:translateY(10px);}
+    to {opacity:1; transform:translateY(0);}
+}
+.fade-in {
+    animation: fadeIn 0.7s ease-out;
+}
 
 </style>
 """, unsafe_allow_html=True)
-
 
 # ============================================================
 # LOAD MODEL & DATASET
@@ -292,19 +310,20 @@ with tab1:
         border_color = "#2ECC71"
 
     # ===== TAMPILKAN KOTAK KESIMPULAN =====
-    st.markdown(f"""
-    <div style='
+   st.markdown(f"""
+   <div class="fade-in" style='
         background:{box_color};
-        border-left:6px solid {border_color};
-        padding:20px;
-        border-radius:15px;
-        margin-top:10px;
+        border-left:8px solid {border_color};
+        padding:24px;
+        border-radius:14px;
+        margin-top:20px;
         margin-bottom:25px;
+        box-shadow:0px 6px 18px rgba(0,0,0,0.08);
     '>
-        <h4 style='margin-bottom:10px; color:{border_color};'>
-            🧠 Kesimpulan
-        </h4>
-        <p style='font-size:16px; color:#1D3557; line-height:1.7; text-align:justify;'>
+        <h3 style='margin-bottom:10px; color:{border_color}; font-weight:800;'>
+            🧠 Kesimpulan Prediksi
+        </h3>
+        <p style='font-size:17px; color:#1D3557; line-height:1.7; text-align:justify;'>
             {explanation}
         </p>
     </div>
