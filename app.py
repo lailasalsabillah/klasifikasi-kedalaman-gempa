@@ -13,7 +13,7 @@ MODELS_DIR = os.path.join(BASE_DIR, "models")
 
 SCALER_PATH = os.path.join(MODELS_DIR, "scaler.pkl")
 XGB_PATH = os.path.join(MODELS_DIR, "xgb_depth_class.pkl")
-DATASET_PATH = os.path.join(BASE_DIR, "dataset_gempa.csv")
+DATASET_PATH = os.path.join(BASE_DIR, "dataset-gempa.csv")
 
 # -----------------------------
 # Load Model
