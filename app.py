@@ -37,7 +37,7 @@ CLASS_MAP = {
 # Daftar tahun untuk dropdown
 YEARS = list(range(2000, 2031))  # 2000 - 2030
 
-# Nilai default untuk fitur yang tidak diinput user
+# Nilai default fitur lain (tidak diinput user)
 DEFAULT_DMIN = 0.1
 DEFAULT_RMS = 0.8
 DEFAULT_HERR = 5.0
@@ -60,14 +60,6 @@ def predict_depth_class(
     depthError=DEFAULT_DERR,
     magError=DEFAULT_MAGERR,
 ):
-    """
-    Melakukan prediksi kelas kedalaman gempa menggunakan model XGBoost.
-    Fitur lengkap (urutan harus sama dengan saat training):
-
-    [year, latitude, longitude, mag,
-     gap, dmin, rms, horizontalError,
-     depthError, magError]
-    """
     X_input = np.array(
         [
             [
@@ -88,7 +80,6 @@ def predict_depth_class(
     X_scaled = scaler.transform(X_input)
     y_pred = xgb_model.predict(X_scaled)[0]
 
-    # Kalau model dilatih dengan objective multi:softprob
     if hasattr(xgb_model, "predict_proba"):
         proba = xgb_model.predict_proba(X_scaled)[0]
     else:
@@ -98,34 +89,18 @@ def predict_depth_class(
 
 
 # -----------------------------
-# UI Streamlit
+# UI Streamlit (Sidebar Input)
 # -----------------------------
 st.set_page_config(
-    page_title="Klasifikasi Kedalaman Gempa Bumi", layout="centered"
+    page_title="Klasifikasi Kedalaman Gempa Bumi", layout="wide"
 )
 
-st.title("🌋 Klasifikasi Kedalaman Gempa Bumi")
-st.write(
-    """
-Aplikasi ini memprediksi **kelas kedalaman gempa bumi** berdasarkan 
-parameter sederhana yang diinput pengguna.
+# ============================= SIDEBAR =============================
+st.sidebar.title("🌋 Input Parameter Gempa")
 
-Kelas kedalaman:
-- **0** : Shallow (< 70 km)  
-- **1** : Intermediate (70–300 km)  
-- **2** : Deep (> 300 km)  
-"""
-)
+year = st.sidebar.selectbox("Tahun Kejadian", YEARS, index=YEARS.index(2024))
 
-st.markdown("---")
-
-st.subheader("Input Parameter Gempa (Sederhana)")
-
-# Tahun sebagai dropdown
-year = st.selectbox("Tahun Kejadian Gempa", YEARS, index=YEARS.index(2024))
-
-# Empat fitur utama dengan slider (range satu sisi)
-latitude = st.slider(
+latitude = st.sidebar.slider(
     "Latitude",
     min_value=-10.0,
     max_value=10.0,
@@ -134,7 +109,7 @@ latitude = st.slider(
     format="%.2f",
 )
 
-longitude = st.slider(
+longitude = st.sidebar.slider(
     "Longitude",
     min_value=90.0,
     max_value=150.0,
@@ -143,7 +118,7 @@ longitude = st.slider(
     format="%.2f",
 )
 
-mag = st.slider(
+mag = st.sidebar.slider(
     "Magnitudo (Mw)",
     min_value=2.0,
     max_value=9.0,
@@ -152,7 +127,7 @@ mag = st.slider(
     format="%.1f",
 )
 
-gap = st.slider(
+gap = st.sidebar.slider(
     "Gap",
     min_value=0.0,
     max_value=360.0,
@@ -161,34 +136,40 @@ gap = st.slider(
     format="%.0f",
 )
 
-st.caption(
-    "Catatan: Parameter lain (Dmin, RMS, error) diisi otomatis dengan nilai rata-rata "
-    "agar input tetap sederhana."
+predict_button = st.sidebar.button("🔍 Prediksi Sekarang")
+
+# ============================= MAIN PAGE =============================
+st.title("🔎 Prediksi Kelas Kedalaman Gempa Bumi")
+st.write(
+    """
+Aplikasi ini memprediksi **kelas kedalaman gempa bumi** berdasarkan input sederhana
+(latitude, longitude, magnitudo, dan gap).  
+Model yang digunakan: **XGBoost**.
+"""
 )
 
 st.markdown("---")
 
-if st.button("🔍 Prediksi Kedalaman Gempa"):
+if predict_button:
     y_pred, proba = predict_depth_class(
-        year,
-        latitude,
-        longitude,
-        mag,
-        gap,
+        year, latitude, longitude, mag, gap
     )
 
-    st.subheader("Hasil Prediksi")
+    st.subheader("📌 Hasil Prediksi")
     st.write(f"**Kelas Prediksi:** `{y_pred}`")
     st.write(f"**Interpretasi:** {CLASS_MAP.get(y_pred, 'Tidak diketahui')}")
 
     if proba is not None:
-        st.write("**Probabilitas Tiap Kelas:**")
+        st.subheader("📊 Probabilitas Tiap Kelas")
         for i, p in enumerate(proba):
             st.write(
-                f"- Kelas {i} ({CLASS_MAP.get(i, '')}): **{p * 100:.2f}%**"
+                f"- **Kelas {i}** ({CLASS_MAP.get(i)}): **{p*100:.2f}%**"
             )
 
     st.info(
         "Catatan: Hasil prediksi ini merupakan output model machine learning "
-        "dan tidak menggantikan analisis resmi dari ahli seismologi."
+        "dan bukan analisis resmi ahli seismologi."
     )
+
+else:
+    st.info("Masukkan data di sidebar, lalu klik **Prediksi Sekarang**.")
