@@ -211,13 +211,15 @@ tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi", "📊 Grafik", "📁 Info Dat
 
 
 # ============================================================
-# TAB 1 — HASIL PREDIKSI
+# TAB 1 — HASIL PREDIKSI (versi urutan baru)
 # ============================================================
 with tab1:
     if btn:
         pred, proba = predict_depth(year, lat, lon, depth, gap, dmin, rms, herr, magerr)
 
-        # RINGKASAN INPUT
+        # ===============================
+        # 1. RINGKASAN INPUT
+        # ===============================
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📝 Ringkasan Input Pengguna")
 
@@ -236,7 +238,10 @@ with tab1:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # HASIL PREDIKSI
+
+        # ===============================
+        # 2. HASIL PREDIKSI
+        # ===============================
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("🎯 Hasil Prediksi Kedalaman Gempa")
 
@@ -249,41 +254,9 @@ with tab1:
         st.markdown("</div>", unsafe_allow_html=True)
 
 
-        # ============================
-        # PENJELASAN OTOMATIS PREDIKSI
-        # ============================
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("🧠 Penjelasan Hasil Prediksi")
-
-        max_proba = np.max(proba) * 100
-
-        if pred == 0:
-            explanation = f"""
-            **Gempa Dangkal (< 70 km)**  
-            - Berpotensi merusak karena dekat permukaan.  
-            - Getaran terasa lebih kuat di permukaan.  
-            - Model yakin dengan hasil ini sebesar **{max_proba:.2f}%**.
-            """
-        elif pred == 1:
-            explanation = f"""
-            **Gempa Intermediate (70–300 km)**  
-            - Dampak sedang, tergantung lokasi & magnitudo.  
-            - Getaran stabil namun bisa terasa kuat di area tertentu.  
-            - Model memberikan keyakinan **{max_proba:.2f}%** untuk kelas ini.
-            """
-        else:
-            explanation = f"""
-            **Gempa Dalam (> 300 km)**  
-            - Umumnya tidak berbahaya.  
-            - Energi merambat lebih jauh sehingga efek berkurang.  
-            - Tingkat keyakinan model: **{max_proba:.2f}%**.
-            """
-
-        st.markdown(f"<p style='font-size:16px;'>{explanation}</p>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-
-        # PROBABILITAS
+        # ===============================
+        # 3. PROBABILITAS PREDIKSI
+        # ===============================
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📈 Probabilitas Prediksi")
         st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
@@ -293,9 +266,42 @@ with tab1:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
+
+        # ===============================
+        # 4. PENJELASAN (DIPINDAH KE BAWAH)
+        # ===============================
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("🧠 Penjelasan Hasil Prediksi")
+
+        max_proba = np.max(proba) * 100
+
+        if pred == 0:
+            explanation = f"""
+            **Gempa Dangkal (< 70 km)**  
+            - Berpotensi merusak karena pusat gempa dekat dengan permukaan.  
+            - Getaran dapat dirasakan lebih kuat.  
+            - Keyakinan model: **{max_proba:.2f}%**.
+            """
+        elif pred == 1:
+            explanation = f"""
+            **Gempa Intermediate (70–300 km)**  
+            - Dampak sedang, masih bisa menimbulkan getaran kuat.  
+            - Lebih dalam dari gempa dangkal, sehingga efeknya melemah.  
+            - Keyakinan model: **{max_proba:.2f}%**.
+            """
+        else:
+            explanation = f"""
+            **Gempa Dalam (> 300 km)**  
+            - Biasanya tidak berbahaya karena sangat jauh dari permukaan.  
+            - Energi merambat jauh sehingga getaran melemah.  
+            - Keyakinan model: **{max_proba:.2f}%**.
+            """
+
+        st.markdown(f"<p style='font-size:16px;'>{explanation}</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
     else:
         st.info("👈 Masukkan input, lalu klik *Prediksi Sekarang*.")
-
 
 # ============================================================
 # TAB 2 — GRAFIK
