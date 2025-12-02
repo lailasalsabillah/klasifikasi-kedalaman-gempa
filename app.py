@@ -34,18 +34,15 @@ CLASS_MAP = {
     2: "Deep (> 300 km) - Umumnya lebih aman di permukaan",
 }
 
-FEATURE_COLS = [
-    "year",
-    "latitude",
-    "longitude",
-    "mag",
-    "gap",
-    "dmin",
-    "rms",
-    "horizontalError",
-    "depthError",
-    "magError",
-]
+# Daftar tahun untuk dropdown
+YEARS = list(range(2000, 2031))  # 2000 - 2030
+
+# Nilai default untuk fitur yang tidak diinput user
+DEFAULT_DMIN = 0.1
+DEFAULT_RMS = 0.8
+DEFAULT_HERR = 5.0
+DEFAULT_DERR = 5.0
+DEFAULT_MAGERR = 0.1
 
 
 # -----------------------------
@@ -57,14 +54,19 @@ def predict_depth_class(
     longitude,
     mag,
     gap,
-    dmin,
-    rms,
-    horizontalError,
-    depthError,
-    magError,
+    dmin=DEFAULT_DMIN,
+    rms=DEFAULT_RMS,
+    horizontalError=DEFAULT_HERR,
+    depthError=DEFAULT_DERR,
+    magError=DEFAULT_MAGERR,
 ):
     """
     Melakukan prediksi kelas kedalaman gempa menggunakan model XGBoost.
+    Fitur lengkap (urutan harus sama dengan saat training):
+
+    [year, latitude, longitude, mag,
+     gap, dmin, rms, horizontalError,
+     depthError, magError]
     """
     X_input = np.array(
         [
@@ -106,7 +108,7 @@ st.title("🌋 Klasifikasi Kedalaman Gempa Bumi")
 st.write(
     """
 Aplikasi ini memprediksi **kelas kedalaman gempa bumi** berdasarkan 
-fitur-fitur seismik menggunakan model **XGBoost** yang telah dilatih.
+parameter sederhana yang diinput pengguna.
 
 Kelas kedalaman:
 - **0** : Shallow (< 70 km)  
@@ -117,31 +119,52 @@ Kelas kedalaman:
 
 st.markdown("---")
 
-st.subheader("Input Parameter Gempa")
+st.subheader("Input Parameter Gempa (Sederhana)")
 
-col1, col2 = st.columns(2)
+# Tahun sebagai dropdown
+year = st.selectbox("Tahun Kejadian Gempa", YEARS, index=YEARS.index(2024))
 
-with col1:
-    year = st.number_input("Tahun", min_value=1900, max_value=2100, value=2024)
-    latitude = st.number_input("Latitude", value=-2.0, format="%.4f")
-    longitude = st.number_input("Longitude", value=120.0, format="%.4f")
-    mag = st.number_input(
-        "Magnitudo (Mw)",
-        min_value=0.0,
-        max_value=10.0,
-        value=5.0,
-        format="%.2f",
-    )
-    gap = st.number_input("Gap", value=100.0, format="%.2f")
+# Empat fitur utama dengan slider (range satu sisi)
+latitude = st.slider(
+    "Latitude",
+    min_value=-10.0,
+    max_value=10.0,
+    value=-2.0,
+    step=0.01,
+    format="%.2f",
+)
 
-with col2:
-    dmin = st.number_input("Dmin", value=0.1, format="%.4f")
-    rms = st.number_input("RMS", value=0.8, format="%.3f")
-    horizontalError = st.number_input(
-        "Horizontal Error", value=5.0, format="%.3f"
-    )
-    depthError = st.number_input("Depth Error", value=5.0, format="%.3f")
-    magError = st.number_input("Mag Error", value=0.1, format="%.3f")
+longitude = st.slider(
+    "Longitude",
+    min_value=90.0,
+    max_value=150.0,
+    value=120.0,
+    step=0.01,
+    format="%.2f",
+)
+
+mag = st.slider(
+    "Magnitudo (Mw)",
+    min_value=2.0,
+    max_value=9.0,
+    value=5.0,
+    step=0.1,
+    format="%.1f",
+)
+
+gap = st.slider(
+    "Gap",
+    min_value=0.0,
+    max_value=360.0,
+    value=100.0,
+    step=1.0,
+    format="%.0f",
+)
+
+st.caption(
+    "Catatan: Parameter lain (Dmin, RMS, error) diisi otomatis dengan nilai rata-rata "
+    "agar input tetap sederhana."
+)
 
 st.markdown("---")
 
@@ -152,11 +175,6 @@ if st.button("🔍 Prediksi Kedalaman Gempa"):
         longitude,
         mag,
         gap,
-        dmin,
-        rms,
-        horizontalError,
-        depthError,
-        magError,
     )
 
     st.subheader("Hasil Prediksi")
