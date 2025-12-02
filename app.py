@@ -8,18 +8,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ============================================================
-# CUSTOM CSS – TEMA TECTONIC MODERN
+# CUSTOM CSS – PALET WARNA NOMOR 2 (EARTHQUAKE THEME)
 # ============================================================
 st.markdown("""
 <style>
 
 :root {
-    --primary-color: #3498db;
-    --secondary-color: #16a085;
-    --background: #f4fefb;
-    --card-bg: #ffffff;
-    --card-border: #d9f7ef;
-    --text-dark: #0a3d3f;
+    --primary-color: #E63946;      /* Earthquake Red */
+    --secondary-color: #457B9D;    /* Ash Blue */
+    --background: #F8F9FA;         /* Light Gray Background */
+    --card-bg: #FFFFFF;
+    --card-border: #DDE5EC;
+    --text-dark: #1D3557;          /* Deep Navy Text */
     --radius: 18px;
 }
 
@@ -51,7 +51,7 @@ st.markdown("""
 .header-sub {
     font-size: 18px;
     text-align: center;
-    color:#198f84;
+    color: var(--secondary-color);
     margin-bottom: 25px;
 }
 
@@ -85,9 +85,9 @@ st.markdown("""
     color:white;
     font-weight:600;
 }
-.badge-0 { background:#e74c3c; }
-.badge-1 { background:#f1c40f; }
-.badge-2 { background:#27ae60; }
+.badge-0 { background:#E63946; }
+.badge-1 { background:#F1C40F; }
+.badge-2 { background:#2ECC71; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -111,11 +111,12 @@ CLASS_MAP = {
     2: "Deep (> 300 km) – Relatif Aman"
 }
 
+
 # ============================================================
 # FUNGSI PREDIKSI
 # ============================================================
-def predict_depth(year, lat, lon, mag, gap, dmin, rms, herr, magerr):
-    X = np.array([[year, lat, lon, mag, gap, dmin, rms, herr, magerr]])
+def predict_depth(year, lat, lon, depth, gap, dmin, rms, herr, magerr):
+    X = np.array([[year, lat, lon, depth, gap, dmin, rms, herr, magerr]])
     X_scaled = scaler.transform(X)
 
     pred = xgb_model.predict(X_scaled)[0]
@@ -132,7 +133,7 @@ st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 
 # ============================================================
-# SIDEBAR BARU — FITUR, SUMBER DATA, WARNING, DEVELOPER
+# SIDEBAR — FITUR + SUMBER DATA + INPUT
 # ============================================================
 
 st.sidebar.markdown("## ✨ Fitur:")
@@ -140,7 +141,7 @@ st.sidebar.markdown("""
 - 📊 **Grafik Kedalaman**
 - 📋 **Tabel data lengkap**
 - 📥 **Download data CSV**
-- 🚨 **Peringatan gempa besar**
+- 🚨 **Peringatan gempa dangkal**
 """)
 
 st.sidebar.markdown("---")
@@ -150,18 +151,18 @@ st.sidebar.markdown("## 📌 Sumber Data:")
 st.sidebar.markdown("""
 - 🌎 **USGS (United States Geological Survey)**
 - 🇮🇩 Area: **Indonesia**
-- 🔄 Update: **Informasi Gempa**
+- 🔄 **Informasi Gempa**
 """)
 
 st.sidebar.markdown("---")
 
-# Input Parameter Gempa
+# INPUT DATA
 st.sidebar.markdown("## 🌍 Input Data Gempa")
 
 year = st.sidebar.selectbox("Tahun", YEARS)
 lat  = st.sidebar.slider("Latitude",  -12.0, 8.0, -2.0)
 lon  = st.sidebar.slider("Longitude", 90.0, 150.0, 120.0)
-mag  = st.sidebar.slider("Magnitudo", 2.0, 9.0, 5.0)
+depth = st.sidebar.slider("Kedalaman (km)", 0.0, 700.0, 10.0)
 gap  = st.sidebar.slider("Gap", 0, 360, 100)
 dmin = st.sidebar.slider("Dmin", 0.0, 20.0, 5.0)
 rms  = st.sidebar.slider("RMS", 0.0, 2.0, 0.5)
@@ -172,21 +173,21 @@ btn = st.sidebar.button("🔍 Prediksi Sekarang")
 
 st.sidebar.markdown("---")
 
-# Sistem Warning
-if mag >= 6.0:
+# WARNING BASED ON DEPTH
+if depth < 70:
     st.sidebar.markdown("""
-    <div style='padding:14px; background:#ffdddd; border-left:6px solid red; 
+    <div style='padding:14px; background:#FDECEA; border-left:6px solid #E63946;
                 border-radius:10px; margin-bottom:10px;'>
-        <b>🚨 PERINGATAN GEMPA BESAR!</b><br>
-        Magnitudo ≥ 6.0 terdeteksi dari input.
+        <b>🚨 GEMPA DANGKAL!</b><br>
+        Kedalaman < 70 km terdeteksi.
     </div>
     """, unsafe_allow_html=True)
 else:
     st.sidebar.markdown(f"""
-    <div style='padding:14px; background:#fff6d5; border-left:6px solid #f1c40f; 
+    <div style='padding:14px; background:#FFF9DB; border-left:6px solid #F1C40F;
                 border-radius:10px; margin-bottom:10px;'>
-        <b>ℹ️ Tidak ada gempa besar.</b><br>
-        Magnitudo input: {mag}
+        <b>ℹ️ Kedalaman Aman</b><br>
+        Depth input: {depth} km
     </div>
     """, unsafe_allow_html=True)
 
@@ -194,10 +195,11 @@ st.sidebar.markdown("---")
 
 # Developer Box
 st.sidebar.markdown("""
-<div style='padding:14px; background:#e8f9f5; border-radius:12px; text-align:center;'>
+<div style='padding:14px; background:#E8F2FB;
+            border-radius:12px; text-align:center;'>
     <b>👩‍💻 Dibuat oleh:</b><br>
-    <span style='font-size:17px; color:#0a3d3f;'>
-        <b>Laila Salsabilla Hanifa-202210715333</b>
+    <span style='font-size:17px; color:#1D3557;'>
+        <b>Laila Salsabilla Hanifa - 202210715333</b>
     </span>
 </div>
 """, unsafe_allow_html=True)
@@ -214,7 +216,7 @@ tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi", "📊 Grafik", "📁 Info Dat
 # ============================================================
 with tab1:
     if btn:
-        pred, proba = predict_depth(year, lat, lon, mag, gap, dmin, rms, herr, magerr)
+        pred, proba = predict_depth(year, lat, lon, depth, gap, dmin, rms, herr, magerr)
 
         # RINGKASAN INPUT
         st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -225,9 +227,9 @@ with tab1:
             st.write(f"- **Tahun:** {year}")
             st.write(f"- **Latitude:** {lat}")
             st.write(f"- **Longitude:** {lon}")
-            st.write(f"- **Magnitudo:** {mag}")
-            st.write(f"- **Gap:** {gap}")
+            st.write(f"- **Kedalaman:** {depth} km")
         with col2:
+            st.write(f"- **Gap:** {gap}")
             st.write(f"- **Dmin:** {dmin}")
             st.write(f"- **RMS:** {rms}")
             st.write(f"- **Horizontal Error:** {herr}")
@@ -265,7 +267,6 @@ with tab1:
 # TAB 2 — GRAFIK
 # ============================================================
 with tab2:
-
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📊 Probabilitas Kelas (Plotly)")
 
@@ -274,12 +275,12 @@ with tab2:
         fig.add_trace(go.Bar(
             x=["Kelas 0", "Kelas 1", "Kelas 2"],
             y=proba,
-            marker=dict(color=["#e74c3c", "#f1c40f", "#27ae60"])
+            marker=dict(color=["#E63946", "#F1C40F", "#2ECC71"])
         ))
         fig.update_layout(title="Probabilitas Prediksi")
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("Grafik muncul setelah melakukan prediksi.")
+        st.warning("Grafik muncul setelah prediksi dilakukan.")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -297,5 +298,4 @@ with tab3:
     st.write("Tahun unik:", list(df["year"].unique()))
 
     st.dataframe(df.head())
-
     st.markdown("</div>", unsafe_allow_html=True)
