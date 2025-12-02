@@ -122,7 +122,6 @@ def predict_depth(year, lat, lon, mag, gap):
         "magerr": df["magError"].mean()
     }
 
-    # TOTAL 9 FITUR (SESUI AI TRAINING)
     X = np.array([[year, lat, lon, mag, gap,
                    DEFAULTS["dmin"], DEFAULTS["rms"],
                    DEFAULTS["herr"], DEFAULTS["magerr"]]])
@@ -161,7 +160,7 @@ btn = st.sidebar.button("🔍 Prediksi Sekarang")
 
 
 # ============================================================
-# ======== TAB NAVIGASI
+# TABS
 # ============================================================
 tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi", "📊 Grafik", "📁 Info Dataset"])
 
@@ -174,6 +173,7 @@ with tab1:
         with st.spinner("⏳ Menganalisis data gempa..."):
             pred, proba = predict_depth(year, lat, lon, mag, gap)
 
+        # ===================== HASIL PREDIKSI =====================
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📌 Hasil Prediksi Kedalaman Gempa")
 
@@ -181,7 +181,25 @@ with tab1:
         st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # PROBABILITAS
+        # ===================== RINGKASAN INPUT =====================
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("📝 Ringkasan Input Pengguna")
+
+        st.write(f"""
+        - **Tahun**: {year}  
+        - **Latitude**: {lat}  
+        - **Longitude**: {lon}  
+        - **Magnitudo**: {mag}  
+        - **Gap**: {gap}  
+        - **Dmin**: {dmin}  
+        - **RMS**: {rms}  
+        - **Horizontal Error**: {herr}  
+        - **Magnitude Error**: {magerr}  
+        """)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # ===================== PROBABILITAS =====================
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📈 Probabilitas Kelas")
         for i, p in enumerate(proba):
@@ -253,7 +271,7 @@ with tab2:
 
 
 # ============================================================
-# TAB 3 — INFO DATASET + GRAFIK GAMBAR
+# TAB 3 — INFO DATASET
 # ============================================================
 with tab3:
 
@@ -267,13 +285,12 @@ with tab3:
     st.dataframe(df.head())
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ============ GAMBAR 1: Distribusi Kelas Kedalaman ============
+
+    # Gambar: Distribusi Kelas
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("🖼️ Distribusi Kelas Kedalaman (Gambar)")
+    st.subheader("🖼️ Distribusi Kelas Kedalaman")
 
-    import matplotlib.pyplot as plt
     import seaborn as sns
-
     fig1, ax = plt.subplots(figsize=(6,4))
     sns.countplot(x=df["depth_class"], palette="viridis", ax=ax)
     ax.set_title("Distribusi Depth Class")
@@ -282,7 +299,8 @@ with tab3:
     st.pyplot(fig1)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ============ GAMBAR 2: Histogram Magnitudo ============
+
+    # Gambar: Histogram Magnitudo
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("🖼️ Histogram Magnitudo")
 
@@ -294,9 +312,10 @@ with tab3:
     st.pyplot(fig2)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ============ GAMBAR 3: Sebaran Lokasi Gempa ============
+
+    # Gambar: Scatter lokasi
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("🖼️ Sebaran Lokasi Gempa (Latitude–Longitude)")
+    st.subheader("🖼️ Sebaran Lokasi Gempa")
 
     fig3, ax3 = plt.subplots(figsize=(6,5))
     ax3.scatter(df["longitude"], df["latitude"], s=8, alpha=0.5, color="#e67e22")
@@ -306,7 +325,8 @@ with tab3:
     st.pyplot(fig3)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ============ GAMBAR 4: Depth rata-rata per tahun ============
+
+    # Gambar: Depth per tahun
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("🖼️ Rata-rata Kedalaman per Tahun")
 
@@ -320,4 +340,3 @@ with tab3:
     ax4.set_ylabel("Kedalaman (km)")
     st.pyplot(fig4)
     st.markdown("</div>", unsafe_allow_html=True)
-
