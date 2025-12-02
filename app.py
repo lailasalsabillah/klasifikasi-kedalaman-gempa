@@ -135,7 +135,6 @@ st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 # ============================================================
 # SIDEBAR — FITUR + SUMBER DATA + INPUT
 # ============================================================
-
 st.sidebar.markdown("## ✨ Fitur:")
 st.sidebar.markdown("""
 - 📊 **Grafik Kedalaman**
@@ -249,6 +248,41 @@ with tab1:
         st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
         st.markdown("</div>", unsafe_allow_html=True)
 
+
+        # ============================
+        # PENJELASAN OTOMATIS PREDIKSI
+        # ============================
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("🧠 Penjelasan Hasil Prediksi")
+
+        max_proba = np.max(proba) * 100
+
+        if pred == 0:
+            explanation = f"""
+            **Gempa Dangkal (< 70 km)**  
+            - Berpotensi merusak karena dekat permukaan.  
+            - Getaran terasa lebih kuat di permukaan.  
+            - Model yakin dengan hasil ini sebesar **{max_proba:.2f}%**.
+            """
+        elif pred == 1:
+            explanation = f"""
+            **Gempa Intermediate (70–300 km)**  
+            - Dampak sedang, tergantung lokasi & magnitudo.  
+            - Getaran stabil namun bisa terasa kuat di area tertentu.  
+            - Model memberikan keyakinan **{max_proba:.2f}%** untuk kelas ini.
+            """
+        else:
+            explanation = f"""
+            **Gempa Dalam (> 300 km)**  
+            - Umumnya tidak berbahaya.  
+            - Energi merambat lebih jauh sehingga efek berkurang.  
+            - Tingkat keyakinan model: **{max_proba:.2f}%**.
+            """
+
+        st.markdown(f"<p style='font-size:16px;'>{explanation}</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
         # PROBABILITAS
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📈 Probabilitas Prediksi")
@@ -267,6 +301,8 @@ with tab1:
 # TAB 2 — GRAFIK
 # ============================================================
 with tab2:
+
+    # Grafik probabilitas
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📊 Probabilitas Kelas (Plotly)")
 
@@ -283,7 +319,8 @@ with tab2:
         st.warning("Grafik muncul setelah prediksi dilakukan.")
 
     st.markdown("</div>", unsafe_allow_html=True)
-    
+
+
     # ================================
     # 🔵 HISTOGRAM KEDALAMAN
     # ================================
@@ -296,12 +333,11 @@ with tab2:
     ax.set_ylabel("Frekuensi")
     ax.set_title("Distribusi Kedalaman Gempa")
     st.pyplot(fig_hist)
-
     st.markdown("</div>", unsafe_allow_html=True)
 
 
     # ================================
-    # 🔵 SCATTER PLOT: KEDALAMAN vs MAGNITUDE
+    # 🔵 SCATTER DEPTH VS MAG
     # ================================
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📌 Scatter Plot: Kedalaman vs Magnitudo")
@@ -312,12 +348,11 @@ with tab2:
     ax2.set_ylabel("Magnitudo")
     ax2.set_title("Sebaran Kedalaman Terhadap Magnitudo")
     st.pyplot(fig_scatter)
-
     st.markdown("</div>", unsafe_allow_html=True)
 
 
     # ================================
-    # 🔵 BOXPLOT KEDALAMAN
+    # 🔵 BOXPLOT DEPTH
     # ================================
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📦 Boxplot Kedalaman Gempa")
@@ -327,11 +362,12 @@ with tab2:
     ax3.set_xlabel("Kedalaman (km)")
     ax3.set_title("Boxplot Sebaran Kedalaman Gempa")
     st.pyplot(fig_box)
-
     st.markdown("</div>", unsafe_allow_html=True)
 
+
+
 # ============================================================
-# TAB 3 — INFO DATASET
+# TAB 3 — INFO DATASET + DOWNLOAD CSV
 # ============================================================
 with tab3:
 
@@ -342,14 +378,11 @@ with tab3:
     st.write("Jumlah kolom:", df.shape[1])
     st.write("Tahun unik:", list(df["year"].unique()))
 
-    # Tampilkan tabel
     st.dataframe(df.head())
 
     # ============================
-    # DOWNLOAD CSV
+    # 🔽 DOWNLOAD CSV
     # ============================
-    st.markdown("<br>", unsafe_allow_html=True)
-
     csv = df.to_csv(index=False).encode('utf-8')
 
     st.download_button(
@@ -357,7 +390,7 @@ with tab3:
         data=csv,
         file_name="dataset_gempa.csv",
         mime="text/csv",
-        help="Klik untuk mengunduh seluruh dataset dalam format CSV"
+        help="Klik untuk mengunduh dataset gempa"
     )
 
     st.markdown("</div>", unsafe_allow_html=True)
