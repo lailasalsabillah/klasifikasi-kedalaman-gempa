@@ -400,5 +400,3 @@ with tab3:
     )
 
     st.markdown("</div>", unsafe_allow_html=True)
-
-bisa ubah dan tabahkan di sini lagsung untu app.py lengkap 
