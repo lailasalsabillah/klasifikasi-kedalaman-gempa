@@ -99,7 +99,6 @@ st.markdown("""
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
 
-# pastikan nama file sesuai dengan yang ada di folder models
 scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
 xgb_model = joblib.load(os.path.join(MODELS_DIR, "xgb_depth_class.pkl"))
 
@@ -112,22 +111,15 @@ CLASS_MAP = {
     2: "Deep (> 300 km) – Relatif Aman"
 }
 
-
 # ============================================================
-# FUNGSI PREDIKSI (SINKRON DENGAN MODELING.PY)
+# FUNGSI PREDIKSI
 # ============================================================
 def predict_depth(year, lat, lon, mag, gap, dmin, rms, herr, magerr):
-    """
-    Total 9 fitur:
-    year, lat, lon, mag, gap, dmin, rms, horizontalError, magError
-    """
-    X = np.array([[year, lat, lon, mag, gap,
-                   dmin, rms, herr, magerr]])
-
+    X = np.array([[year, lat, lon, mag, gap, dmin, rms, herr, magerr]])
     X_scaled = scaler.transform(X)
+
     pred = xgb_model.predict(X_scaled)[0]
     proba = xgb_model.predict_proba(X_scaled)[0]
-
     return pred, proba
 
 
@@ -140,21 +132,76 @@ st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 
 # ============================================================
-# INPUT SIDEBAR
+# SIDEBAR BARU — FITUR, SUMBER DATA, WARNING, DEVELOPER
 # ============================================================
-st.sidebar.title("🌍 Input Data Gempa")
+
+st.sidebar.markdown("## ✨ Fitur:")
+st.sidebar.markdown("""
+- 🗺️ **Peta interaktif**
+- 📊 **Filter magnitudo**
+- 📋 **Tabel data lengkap**
+- 📥 **Download data CSV**
+- 🚨 **Peringatan gempa besar**
+""")
+
+st.sidebar.markdown("---")
+
+# Sumber Data
+st.sidebar.markdown("## 📌 Sumber Data:")
+st.sidebar.markdown("""
+- 🌎 **USGS (United States Geological Survey)**
+- 🇮🇩 Area: **Indonesia**
+- 🔄 Update: **Realtime**
+""")
+
+st.sidebar.markdown("---")
+
+# Input Parameter Gempa
+st.sidebar.markdown("## 🌍 Input Data Gempa")
 
 year = st.sidebar.selectbox("Tahun", YEARS)
-lat = st.sidebar.slider("Latitude", -12.0, 8.0, -2.0)
-lon = st.sidebar.slider("Longitude", 90.0, 150.0, 120.0)
-mag = st.sidebar.slider("Magnitudo", 2.0, 9.0, 5.0)
-gap = st.sidebar.slider("Gap", 0, 360, 100)
+lat  = st.sidebar.slider("Latitude",  -12.0, 8.0, -2.0)
+lon  = st.sidebar.slider("Longitude", 90.0, 150.0, 120.0)
+mag  = st.sidebar.slider("Magnitudo", 2.0, 9.0, 5.0)
+gap  = st.sidebar.slider("Gap", 0, 360, 100)
 dmin = st.sidebar.slider("Dmin", 0.0, 20.0, 5.0)
-rms = st.sidebar.slider("RMS", 0.0, 2.0, 0.5)
+rms  = st.sidebar.slider("RMS", 0.0, 2.0, 0.5)
 herr = st.sidebar.slider("Horizontal Error", 0.0, 30.0, 5.0)
 magerr = st.sidebar.slider("Magnitude Error", 0.0, 0.5, 0.05)
 
 btn = st.sidebar.button("🔍 Prediksi Sekarang")
+
+st.sidebar.markdown("---")
+
+# Sistem Warning
+if mag >= 6.0:
+    st.sidebar.markdown("""
+    <div style='padding:14px; background:#ffdddd; border-left:6px solid red; 
+                border-radius:10px; margin-bottom:10px;'>
+        <b>🚨 PERINGATAN GEMPA BESAR!</b><br>
+        Magnitudo ≥ 6.0 terdeteksi dari input.
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    st.sidebar.markdown(f"""
+    <div style='padding:14px; background:#fff6d5; border-left:6px solid #f1c40f; 
+                border-radius:10px; margin-bottom:10px;'>
+        <b>ℹ️ Tidak ada gempa besar.</b><br>
+        Magnitudo input: {mag}
+    </div>
+    """, unsafe_allow_html=True)
+
+st.sidebar.markdown("---")
+
+# Developer Box
+st.sidebar.markdown("""
+<div style='padding:14px; background:#e8f9f5; border-radius:12px; text-align:center;'>
+    <b>👩‍💻 Dibuat oleh:</b><br>
+    <span style='font-size:17px; color:#0a3d3f;'>
+        <b>Laila Salsabillah</b>
+    </span>
+</div>
+""", unsafe_allow_html=True)
 
 
 # ============================================================
@@ -168,10 +215,9 @@ tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi", "📊 Grafik", "📁 Info Dat
 # ============================================================
 with tab1:
     if btn:
-        with st.spinner("⏳ Menganalisis data gempa..."):
-            pred, proba = predict_depth(year, lat, lon, mag, gap, dmin, rms, herr, magerr)
+        pred, proba = predict_depth(year, lat, lon, mag, gap, dmin, rms, herr, magerr)
 
-        # =============== RINGKASAN INPUT (FIRST CARD) ===============
+        # RINGKASAN INPUT
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📝 Ringkasan Input Pengguna")
 
@@ -190,7 +236,7 @@ with tab1:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # =============== HASIL PREDIKSI (SECOND CARD) ===============
+        # HASIL PREDIKSI
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("🎯 Hasil Prediksi Kedalaman Gempa")
 
@@ -198,14 +244,11 @@ with tab1:
             f"<span class='badge badge-{pred}' style='font-size:20px;'>Kelas {pred}</span>",
             unsafe_allow_html=True
         )
-        st.markdown(
-            f"<p style='font-size:17px; margin-top:10px;'><b>Interpretasi:</b> {CLASS_MAP[pred]}</p>",
-            unsafe_allow_html=True
-        )
 
+        st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # =============== PROBABILITAS (THIRD CARD) ===============
+        # PROBABILITAS
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📈 Probabilitas Prediksi")
         st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
@@ -224,7 +267,6 @@ with tab1:
 # ============================================================
 with tab2:
 
-    # Probabilitas kelas (Plotly)
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📊 Probabilitas Kelas (Plotly)")
 
@@ -233,58 +275,21 @@ with tab2:
         fig.add_trace(go.Bar(
             x=["Kelas 0", "Kelas 1", "Kelas 2"],
             y=proba,
-            marker=dict(
-                color=["#e74c3c", "#f1c40f", "#27ae60"],
-                line=dict(color="#0a3d3f", width=1.5)
-            )
+            marker=dict(color=["#e74c3c", "#f1c40f", "#27ae60"])
         ))
-        fig.update_layout(
-            title="Probabilitas Prediksi",
-            template="plotly_white",
-            plot_bgcolor="#f4fefb",
-            paper_bgcolor="#f4fefb",
-            yaxis_title="Probabilitas"
-        )
+        fig.update_layout(title="Probabilitas Prediksi")
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("Grafik probabilitas akan muncul setelah prediksi dilakukan.")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # Grafik kedalaman rata-rata per tahun
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("📈 Depth Rata-rata per Tahun")
-
-    df_year_avg = df.groupby("year")["depth"].mean().reset_index()
-
-    fig2 = go.Figure()
-    fig2.add_trace(go.Scatter(
-        x=df_year_avg["year"],
-        y=df_year_avg["depth"],
-        mode="lines+markers",
-        marker=dict(size=8, color="#16a085"),
-        line=dict(color="#1abc9c", width=3)
-    ))
-    fig2.update_layout(
-        title="Trend Kedalaman Rata-rata per Tahun",
-        template="plotly_white",
-        plot_bgcolor="#f4fefb",
-        paper_bgcolor="#f4fefb",
-        xaxis_title="Tahun",
-        yaxis_title="Kedalaman (km)"
-    )
-
-    st.plotly_chart(fig2, use_container_width=True)
+        st.warning("Grafik muncul setelah melakukan prediksi.")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ============================================================
-# TAB 3 — INFO DATASET + GRAFIK GAMBAR
+# TAB 3 — INFO DATASET
 # ============================================================
 with tab3:
 
-    # Info dataset
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📁 Informasi Dataset")
 
@@ -293,55 +298,5 @@ with tab3:
     st.write("Tahun unik:", list(df["year"].unique()))
 
     st.dataframe(df.head())
-    st.markdown("</div>", unsafe_allow_html=True)
 
-    # Distribusi kelas kedalaman
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("🖼️ Distribusi Kelas Kedalaman")
-
-    fig1, ax = plt.subplots(figsize=(6, 4))
-    sns.countplot(x=df["depth_class"], palette="viridis", ax=ax)
-    ax.set_title("Distribusi Depth Class")
-    ax.set_xlabel("Kelas")
-    ax.set_ylabel("Jumlah Data")
-    st.pyplot(fig1)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # Histogram magnitudo
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("🖼️ Histogram Magnitudo")
-
-    fig2, ax2 = plt.subplots(figsize=(6, 4))
-    sns.histplot(df["mag"], bins=30, kde=True, color="#1abc9c", ax=ax2)
-    ax2.set_title("Distribusi Magnitudo Gempa")
-    ax2.set_xlabel("Magnitudo")
-    ax2.set_ylabel("Frekuensi")
-    st.pyplot(fig2)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # Sebaran lokasi gempa
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("🖼️ Sebaran Lokasi Gempa (Latitude–Longitude)")
-
-    fig3, ax3 = plt.subplots(figsize=(6, 5))
-    ax3.scatter(df["longitude"], df["latitude"], s=8, alpha=0.5, color="#e67e22")
-    ax3.set_title("Sebaran Lokasi Gempa")
-    ax3.set_xlabel("Longitude")
-    ax3.set_ylabel("Latitude")
-    st.pyplot(fig3)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # Rata-rata kedalaman per tahun (matplotlib)
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("🖼️ Rata-rata Kedalaman per Tahun")
-
-    df_year_avg = df.groupby("year")["depth"].mean().reset_index()
-
-    fig4, ax4 = plt.subplots(figsize=(6, 4))
-    ax4.plot(df_year_avg["year"], df_year_avg["depth"],
-             marker="o", color="#16a085", linewidth=3)
-    ax4.set_title("Rata-rata Kedalaman Gempa per Tahun")
-    ax4.set_xlabel("Tahun")
-    ax4.set_ylabel("Kedalaman (km)")
-    st.pyplot(fig4)
     st.markdown("</div>", unsafe_allow_html=True)
