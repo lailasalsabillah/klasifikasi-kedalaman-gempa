@@ -3,6 +3,7 @@ import numpy as np
 import joblib
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
 # ============================================================
@@ -49,14 +50,14 @@ st.markdown("""
 .header-sub {
     font-size: 18px;
     text-align: center;
-    color: #198f84;
+    color:#198f84;
     margin-bottom: 25px;
 }
 
 /* Styled Divider */
 .divider {
     height: 3px;
-    background: linear-gradient(90deg, var(--primary-color), transparent);
+    background: linear-gradient(90deg,var(--primary-color),transparent);
     margin: 15px 0;
     border-radius: 20px;
 }
@@ -64,46 +65,43 @@ st.markdown("""
 /* Buttons */
 .stButton button {
     background-color: var(--primary-color);
-    color: white;
-    border-radius: var(--radius);
-    padding: 10px 16px;
-    border: none;
-    transition: 0.2s;
+    color:white;
+    border-radius:var(--radius);
+    padding:10px 16px;
+    border:none;
+    transition:0.2s;
 }
-
 .stButton button:hover {
     background-color: var(--secondary-color);
-    transform: scale(1.03);
+    transform:scale(1.03);
 }
 
 /* Result Badge */
 .badge {
-    display: inline-block;
-    padding: 6px 14px;
-    border-radius: 14px;
-    color: white;
-    font-weight: 600;
+    display:inline-block;
+    padding:6px 14px;
+    border-radius:14px;
+    color:white;
+    font-weight:600;
 }
-
-.badge-0 { background: #e74c3c; }
-.badge-1 { background: #f1c40f; }
-.badge-2 { background: #27ae60; }
+.badge-0 { background:#e74c3c; }
+.badge-1 { background:#f1c40f; }
+.badge-2 { background:#27ae60; }
 
 </style>
 """, unsafe_allow_html=True)
 
-
 # ============================================================
-# LOAD MODEL + DATASET
+# LOAD MODEL & DATASET
 # ============================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODELS_DIR = os.path.join(BASE_DIR, "models")
+MODELS_DIR = os.path.join(BASE_DIR,"models")
 
-scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
-xgb_model = joblib.load(os.path.join(MODELS_DIR, "xgb_depth_class.pkl"))
+scaler = joblib.load(os.path.join(MODELS_DIR,"scaler.pkl"))
+xgb_model = joblib.load(os.path.join(MODELS_DIR,"xgb_depth_class.pkl"))
 
-df_year = pd.read_csv(os.path.join(BASE_DIR, "dataset-gempa.csv"))
-YEARS = sorted(df_year["year"].unique())
+df = pd.read_csv(os.path.join(BASE_DIR,"dataset-gempa.csv"))
+YEARS = sorted(df["year"].unique())
 
 CLASS_MAP = {
     0: "Shallow (< 70 km) – Sangat Berpotensi",
@@ -111,22 +109,21 @@ CLASS_MAP = {
     2: "Deep (> 300 km) – Relatif Aman"
 }
 
-
 # ============================================================
 # FUNGSI PREDIKSI
 # ============================================================
-def predict_depth(year, lat, lon, mag, gap):
+def predict_depth(year,lat,lon,mag,gap):
     DEFAULTS = {
-        "dmin": df_year["dmin"].mean(),
-        "rms": df_year["rms"].mean(),
-        "herr": df_year["horizontalError"].mean(),
-        "derr": df_year["depthError"].mean(),
-        "magerr": df_year["magError"].mean()
+        "dmin": df["dmin"].mean(),
+        "rms": df["rms"].mean(),
+        "herr": df["horizontalError"].mean(),
+        "derr": df["depthError"].mean(),
+        "magerr": df["magError"].mean(),
     }
 
-    X = np.array([[year, lat, lon, mag, gap,
-                   DEFAULTS["dmin"], DEFAULTS["rms"],
-                   DEFAULTS["herr"], DEFAULTS["derr"],
+    X = np.array([[year,lat,lon,mag,gap,
+                   DEFAULTS["dmin"],DEFAULTS["rms"],
+                   DEFAULTS["herr"],DEFAULTS["derr"],
                    DEFAULTS["magerr"]]])
 
     X_scaled = scaler.transform(X)
@@ -137,58 +134,140 @@ def predict_depth(year, lat, lon, mag, gap):
 
 
 # ============================================================
-# HEADER
+# HEADER UTAMA
 # ============================================================
-st.markdown("<div class='header-title'>🌋 Prediksi Kedalaman Gempa Tektonik</div>", unsafe_allow_html=True)
-st.markdown("<div class='header-sub'>Machine Learning – XGBoost Earthquake Depth Classifier</div>", unsafe_allow_html=True)
-st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+st.markdown("<div class='header-title'>🌋 Prediksi Kedalaman Gempa Tektonik</div>",unsafe_allow_html=True)
+st.markdown("<div class='header-sub'>Machine Learning – XGBoost Earthquake Depth Classifier</div>",unsafe_allow_html=True)
+st.markdown("<div class='divider'></div>",unsafe_allow_html=True)
 
 
 # ============================================================
-# SIDEBAR INPUT
+# INPUT SIDEBAR
 # ============================================================
 st.sidebar.title("🌍 Input Data Gempa")
 
 year = st.sidebar.selectbox("Tahun", YEARS)
-lat = st.sidebar.slider("Latitude", -12.0, 8.0, -2.0)
-lon = st.sidebar.slider("Longitude", 90.0, 150.0, 120.0)
-mag = st.sidebar.slider("Magnitudo", 2.0, 9.0, 5.0)
-gap = st.sidebar.slider("Gap", 0, 360, 100)
+lat = st.sidebar.slider("Latitude",-12.0,8.0,-2.0)
+lon = st.sidebar.slider("Longitude",90.0,150.0,120.0)
+mag = st.sidebar.slider("Magnitudo",2.0,9.0,5.0)
+gap = st.sidebar.slider("Gap",0,360,100)
 
-btn_predict = st.sidebar.button("🔍 Prediksi Sekarang")
+btn = st.sidebar.button("🔍 Prediksi Sekarang")
 
 
 # ============================================================
-# MAIN OUTPUT AREA
+# ======== TAB NAVIGASI (3 TAB)
 # ============================================================
-if btn_predict:
+tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi","📊 Grafik","📁 Info Dataset"])
 
-    with st.spinner("⏳ Sedang menganalisis data gempa..."):
-        pred, proba = predict_depth(year, lat, lon, mag, gap)
 
-    # ===================== CARD HASIL =====================
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
+# ============================================================
+# TAB 1 — HASIL PREDIKSI
+# ============================================================
+with tab1:
+    if btn:
+        with st.spinner("⏳ Menganalisis data gempa..."):
+            pred, proba = predict_depth(year,lat,lon,mag,gap)
 
-    st.subheader("📌 Hasil Prediksi")
+        st.markdown("<div class='card'>",unsafe_allow_html=True)
+        st.subheader("📌 Hasil Prediksi Kedalaman Gempa")
 
-    st.write(f"""
-    <span class='badge badge-{pred}'>
-        Kelas {pred}
-    </span>
-    """, unsafe_allow_html=True)
+        st.write(f"""
+        <span class='badge badge-{pred}'>Kelas {pred}</span>
+        """,unsafe_allow_html=True)
 
-    st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
+        st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>",unsafe_allow_html=True)
 
-    # ===================== PROBABILITAS =====================
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("📊 Probabilitas Kelas")
+        # PROBABILITAS
+        st.markdown("<div class='card'>",unsafe_allow_html=True)
+        st.subheader("📈 Probabilitas Kelas")
+        for i,p in enumerate(proba):
+            st.write(f"- **Kelas {i}** ({CLASS_MAP[i]}): `{p*100:.2f}%`")
+        st.markdown("</div>",unsafe_allow_html=True)
 
-    for i, p in enumerate(proba):
-        st.write(f"- **Kelas {i}** ({CLASS_MAP[i]}): `{p*100:.2f}%`")
+    else:
+        st.info("👈 Masukkan parameter gempa dan klik *Prediksi Sekarang*.")
 
-    st.markdown("</div>", unsafe_allow_html=True)
 
-else:
-    st.info("👈 Masukkan parameter gempa di sidebar, lalu klik **Prediksi Sekarang**.")
+# ============================================================
+# TAB 2 — GRAFIK
+# ============================================================
+with tab2:
+
+    st.markdown("<div class='card'>",unsafe_allow_html=True)
+    st.subheader("📊 Plot Probabilitas (Plotly Style Tectonic)")
+
+    if btn:
+        # Plotly bar chart
+        fig = go.Figure()
+
+        fig.add_trace(go.Bar(
+            x=["Kelas 0","Kelas 1","Kelas 2"],
+            y=proba,
+            marker=dict(
+                color=["#e74c3c","#f1c40f","#27ae60"],
+                line=dict(color="#0a3d3f",width=1.5)
+            )
+        ))
+
+        fig.update_layout(
+            title="Probabilitas Prediksi Model",
+            xaxis_title="Kelas",
+            yaxis_title="Probabilitas",
+            template="plotly_white",
+            plot_bgcolor="#f4fefb",
+            paper_bgcolor="#f4fefb"
+        )
+
+        st.plotly_chart(fig,use_container_width=True)
+
+    else:
+        st.warning("Grafik akan muncul setelah melakukan prediksi.")
+
+    st.markdown("</div>",unsafe_allow_html=True)
+
+    # Grafik Magnitudo per Tahun
+    st.markdown("<div class='card'>",unsafe_allow_html=True)
+    st.subheader("📈 Rata-rata Magnitudo per Tahun")
+
+    df_year_avg = df.groupby("year")["mag"].mean().reset_index()
+
+    fig2 = go.Figure()
+    fig2.add_trace(go.Scatter(
+        x=df_year_avg["year"],
+        y=df_year_avg["mag"],
+        mode="lines+markers",
+        marker=dict(size=8,color="#16a085"),
+        line=dict(color="#1abc9c",width=3)
+    ))
+
+    fig2.update_layout(
+        template="plotly_white",
+        plot_bgcolor="#f4fefb",
+        paper_bgcolor="#f4fefb",
+        xaxis_title="Tahun",
+        yaxis_title="Magnitudo (Mw)"
+    )
+
+    st.plotly_chart(fig2,use_container_width=True)
+
+    st.markdown("</div>",unsafe_allow_html=True)
+
+
+# ============================================================
+# TAB 3 — INFO DATASET
+# ============================================================
+with tab3:
+
+    st.markdown("<div class='card'>",unsafe_allow_html=True)
+    st.subheader("📁 Informasi Dataset Gempa")
+
+    st.write("Jumlah data:", df.shape[0])
+    st.write("Jumlah kolom:", df.shape[1])
+    st.write("Tahun unik:", list(df["year"].unique()))
+
+    st.dataframe(df.head())
+
+    st.markdown("</div>",unsafe_allow_html=True)
