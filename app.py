@@ -1,107 +1,65 @@
-import streamlit as st
-import numpy as np
-import pandas as pd
+import os
 import joblib
+import numpy as np
+import streamlit as st
 
-# -------------------------------
-# TITLE
-# -------------------------------
-st.title("🌍 Prediksi Kategori Kedalaman Gempa")
-st.write("Model menggunakan XGBoost (versi ringan untuk Streamlit Cloud)")
+# -----------------------------
+# 1. Load scaler & model
+# -----------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+scaler_path = os.path.join(BASE_DIR, "models", "scaler.pkl")
+xgb_path    = os.path.join(BASE_DIR, "models", "xgb_depth_class.pkl")
 
+scaler = joblib.load(scaler_path)
+xgb_model = joblib.load(xgb_path)
 
-# -------------------------------
-# LOAD MODEL
-# -------------------------------
-scaler = joblib.load("models/scaler.pkl")
-xgb_model = joblib.load("models/xgb_depth_class.pkl")
-
-label_map = {
-    0: "Shallow (<70 km)",
-    1: "Intermediate (70–300 km)",
-    2: "Deep (>300 km)"
+# mapping label ke teks
+CLASS_MAP = {
+    0: "Shallow (< 70 km) - Paling berbahaya",
+    1: "Intermediate (70–300 km) - Bahaya sedang",
+    2: "Deep (> 300 km) - Relatif paling aman"
 }
 
-# -------------------------------
-# FUNGSI PREDIKSI
-# -------------------------------
-def predict_depth(df):
-    scaled = scaler.transform(df)
-    pred = xgb_model.predict(scaled)[0]
-    return label_map[pred]
+# -----------------------------
+# 2. UI Streamlit
+# -----------------------------
+st.title("Klasifikasi Kedalaman Gempa Bumi (LSTM & XGBoost)")
+st.write("Model ini memprediksi kelas kedalaman gempa berdasarkan fitur lokasi & parameter seismik.")
 
-
-# -------------------------------
-# INPUT MODE 1 – PREDIKSI DATA INDIVIDU
-# -------------------------------
-st.header("🔎 Prediksi Kedalaman Gempa (Input Satu Data)")
+st.subheader("Input Fitur Gempa")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    latitude = st.number_input("Latitude", -20.0, 20.0, 0.0)
-    longitude = st.number_input("Longitude", 80.0, 150.0, 100.0)
-    mag = st.number_input("Magnitude", 3.0, 10.0, 5.0)
-    gap = st.number_input("Gap", 0, 300, 40)
-    dmin = st.number_input("Dmin", 0.0, 30.0, 2.0)
+    year = st.number_input("Year", min_value=2000, max_value=2100, value=2024)
+    latitude = st.number_input("Latitude", value=-2.0, format="%.4f")
+    longitude = st.number_input("Longitude", value=120.0, format="%.4f")
+    mag = st.number_input("Magnitude (mag)", min_value=0.0, max_value=10.0, value=5.0, format="%.2f")
 
 with col2:
-    rms = st.number_input("RMS", 0.0, 3.0, 1.0)
-    herror = st.number_input("Horizontal Error", 0.0, 50.0, 5.0)
-    derror = st.number_input("Depth Error", 0.0, 30.0, 5.0)
-    magerr = st.number_input("Magnitude Error", 0.0, 1.0, 0.1)
-    year = st.number_input("Year", 2000, 2030, 2020)
+    gap = st.number_input("Gap", value=100.0, format="%.2f")
+    dmin = st.number_input("Dmin", value=0.1, format="%.4f")
+    rms = st.number_input("RMS", value=0.8, format="%.3f")
+    horizontalError = st.number_input("Horizontal Error", value=5.0, format="%.3f")
+    depthError = st.number_input("Depth Error", value=5.0, format="%.3f")
+    magError = st.number_input("Mag Error", value=0.1, format="%.3f")
 
+if st.button("Prediksi Kedalaman"):
+    # urutan fitur HARUS sama seperti di modeling.py
+    # feature_cols = ["year", "latitude", "longitude", "mag",
+    #                 "gap", "dmin", "rms", "horizontalError",
+    #                 "depthError", "magError"]
+    X_input = np.array([[year, latitude, longitude, mag,
+                         gap, dmin, rms, horizontalError,
+                         depthError, magError]])
 
-# Buat dataframe input
-input_df = pd.DataFrame([[
-    latitude, longitude, mag, gap, dmin,
-    rms, herror, derror, magerr, year
-]], columns=[
-    "latitude", "longitude", "mag", "gap", "dmin",
-    "rms", "horizontal_error", "depth_error", "mag_error", "year"
-])
+    # scaling
+    X_scaled = scaler.transform(X_input)
 
-st.write("📘 **Data Input Anda:**")
-st.dataframe(input_df)
+    # prediksi
+    y_pred = xgb_model.predict(X_scaled)[0]
+    label = CLASS_MAP.get(int(y_pred), "Unknown")
 
-if st.button("Prediksi Kedalaman Gempa"):
-    result = predict_depth(input_df)
-    st.success(f"📌 **Hasil Prediksi: {result}**")
-
-
-# -------------------------------
-# INPUT MODE 2 – RENTANG PARAMETER (SIDEBAR)
-# -------------------------------
-with st.sidebar:
-    st.header("📊 Prediksi Dengan Rentang Parameter")
-
-    lat_range = st.slider("Latitude", -20.0, 20.0, (-10.0, 10.0))
-    lon_range = st.slider("Longitude", 80.0, 150.0, (100.0, 120.0))
-    mag_range = st.slider("Magnitude", 3.0, 10.0, (4.0, 6.0))
-    gap_range = st.slider("Gap", 0, 300, (20, 80))
-    dmin_range = st.slider("Dmin", 0.0, 30.0, (1.0, 5.0))
-    rms_range = st.slider("RMS", 0.0, 3.0, (0.5, 1.5))
-    herror_range = st.slider("Horizontal Error", 0.0, 50.0, (5.0, 10.0))
-    derror_range = st.slider("Depth Error", 0.0, 30.0, (3.0, 8.0))
-    magerr_range = st.slider("Magnitude Error", 0.0, 1.0, (0.05, 0.2))
-    year_range = st.slider("Year", 2000, 2030, (2015, 2025))
-
-    if st.button("Prediksi Dari Rentang"):
-        # Ambil nilai rata-rata dari range
-        data_avg = pd.DataFrame([[
-            np.mean(lat_range), np.mean(lon_range), np.mean(mag_range),
-            np.mean(gap_range), np.mean(dmin_range), np.mean(rms_range),
-            np.mean(herror_range), np.mean(derror_range),
-            np.mean(magerr_range), np.mean(year_range)
-        ]], columns=[
-            "latitude", "longitude", "mag", "gap", "dmin",
-            "rms", "horizontal_error", "depth_error", "mag_error", "year"
-        ])
-
-        depth_res = predict_depth(data_avg)
-
-        st.write("📘 **Data Rata-Rata Rentang:**")
-        st.dataframe(data_avg)
-
-        st.success(f"📌 **Hasil Prediksi Rentang: {depth_res}**")
+    st.subheader("Hasil Prediksi")
+    st.write(f"**Kelas Kedalaman:** {int(y_pred)}")
+    st.write(f"**Interpretasi:** {label}")
