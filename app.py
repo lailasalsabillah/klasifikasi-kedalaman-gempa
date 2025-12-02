@@ -249,7 +249,7 @@ with tab2:
 
 
 # ============================================================
-# TAB 3 — INFO DATASET
+# TAB 3 — INFO DATASET + GRAFIK GAMBAR
 # ============================================================
 with tab3:
 
@@ -261,5 +261,59 @@ with tab3:
     st.write("Tahun unik:", list(df["year"].unique()))
 
     st.dataframe(df.head())
-
     st.markdown("</div>", unsafe_allow_html=True)
+
+    # ============ GAMBAR 1: Distribusi Kelas Kedalaman ============
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("🖼️ Distribusi Kelas Kedalaman (Gambar)")
+
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    fig1, ax = plt.subplots(figsize=(6,4))
+    sns.countplot(x=df["depth_class"], palette="viridis", ax=ax)
+    ax.set_title("Distribusi Depth Class")
+    ax.set_xlabel("Kelas")
+    ax.set_ylabel("Jumlah Data")
+    st.pyplot(fig1)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ============ GAMBAR 2: Histogram Magnitudo ============
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("🖼️ Histogram Magnitudo")
+
+    fig2, ax2 = plt.subplots(figsize=(6,4))
+    sns.histplot(df["mag"], bins=30, kde=True, color="#1abc9c", ax=ax2)
+    ax2.set_title("Distribusi Magnitudo Gempa")
+    ax2.set_xlabel("Magnitudo")
+    ax2.set_ylabel("Frekuensi")
+    st.pyplot(fig2)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ============ GAMBAR 3: Sebaran Lokasi Gempa ============
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("🖼️ Sebaran Lokasi Gempa (Latitude–Longitude)")
+
+    fig3, ax3 = plt.subplots(figsize=(6,5))
+    ax3.scatter(df["longitude"], df["latitude"], s=8, alpha=0.5, color="#e67e22")
+    ax3.set_title("Sebaran Lokasi Gempa")
+    ax3.set_xlabel("Longitude")
+    ax3.set_ylabel("Latitude")
+    st.pyplot(fig3)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ============ GAMBAR 4: Depth rata-rata per tahun ============
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("🖼️ Rata-rata Kedalaman per Tahun")
+
+    df_year_avg = df.groupby("year")["depth"].mean().reset_index()
+
+    fig4, ax4 = plt.subplots(figsize=(6,4))
+    ax4.plot(df_year_avg["year"], df_year_avg["depth"],
+             marker="o", color="#16a085", linewidth=3)
+    ax4.set_title("Rata-rata Kedalaman Gempa per Tahun")
+    ax4.set_xlabel("Tahun")
+    ax4.set_ylabel("Kedalaman (km)")
+    st.pyplot(fig4)
+    st.markdown("</div>", unsafe_allow_html=True)
+
