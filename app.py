@@ -2,42 +2,57 @@ import os
 import numpy as np
 import joblib
 import streamlit as st
+import pandas as pd
 
 # -----------------------------
-# Konfigurasi & Load Model
+# Konfigurasi Direktori Model
 # -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
 
 SCALER_PATH = os.path.join(MODELS_DIR, "scaler.pkl")
 XGB_PATH = os.path.join(MODELS_DIR, "xgb_depth_class.pkl")
+DATASET_PATH = os.path.join(BASE_DIR, "dataset-gempa.csv")
 
+# -----------------------------
+# Cek file model
+# -----------------------------
 if not os.path.exists(SCALER_PATH):
-    raise FileNotFoundError(
-        f"Scaler tidak ditemukan di: {SCALER_PATH}. "
-        f"Jalankan dulu modeling.py untuk melatih dan menyimpan model."
-    )
+    raise FileNotFoundError("File scaler.pkl tidak ditemukan. Jalankan modeling.py terlebih dahulu.")
 
 if not os.path.exists(XGB_PATH):
-    raise FileNotFoundError(
-        f"Model XGBoost tidak ditemukan di: {XGB_PATH}. "
-        f"Jalankan dulu modeling.py untuk melatih dan menyimpan model."
-    )
+    raise FileNotFoundError("File xgb_depth_class.pkl tidak ditemukan. Jalankan modeling.py terlebih dahulu.")
 
+# Load model dan scaler
 scaler = joblib.load(SCALER_PATH)
 xgb_model = joblib.load(XGB_PATH)
 
-# Mapping kelas ke teks
+# -----------------------------
+# Load dataset untuk membaca tahun
+# -----------------------------
+if not os.path.exists(DATASET_PATH):
+    raise FileNotFoundError("dataset-gempa.csv tidak ditemukan di folder project.")
+
+df_year = pd.read_csv(DATASET_PATH)
+
+if "year" in df_year.columns:
+    year_min = int(df_year["year"].min())
+    year_max = int(df_year["year"].max())
+    YEARS = list(range(year_min, year_max + 1))
+else:
+    YEARS = [2020, 2021, 2022, 2023, 2024]  # fallback jika kolom tidak ada
+
+
+# -----------------------------
+# Mapping kelas
+# -----------------------------
 CLASS_MAP = {
     0: "Shallow (< 70 km) - Potensi kerusakan tinggi",
     1: "Intermediate (70–300 km) - Potensi kerusakan sedang",
-    2: "Deep (> 300 km) - Umumnya lebih aman di permukaan",
+    2: "Deep (> 300 km) - Relatif lebih aman di permukaan",
 }
 
-# Daftar tahun untuk dropdown
-YEARS = list(range(2020, 2024))  # 2000 - 2030
-
-# Nilai default fitur lain (tidak diinput user)
+# Nilai default untuk fitur tidak diinput user
 DEFAULT_DMIN = 0.1
 DEFAULT_RMS = 0.8
 DEFAULT_HERR = 5.0
@@ -48,65 +63,44 @@ DEFAULT_MAGERR = 0.1
 # -----------------------------
 # Fungsi Prediksi
 # -----------------------------
-def predict_depth_class(
-    year,
-    latitude,
-    longitude,
-    mag,
-    gap,
-    dmin=DEFAULT_DMIN,
-    rms=DEFAULT_RMS,
-    horizontalError=DEFAULT_HERR,
-    depthError=DEFAULT_DERR,
-    magError=DEFAULT_MAGERR,
-):
-    X_input = np.array(
-        [
-            [
-                year,
-                latitude,
-                longitude,
-                mag,
-                gap,
-                dmin,
-                rms,
-                horizontalError,
-                depthError,
-                magError,
-            ]
-        ]
-    )
+def predict_depth_class(year, latitude, longitude, mag, gap):
+    X_input = np.array([[
+        year,
+        latitude,
+        longitude,
+        mag,
+        gap,
+        DEFAULT_DMIN,
+        DEFAULT_RMS,
+        DEFAULT_HERR,
+        DEFAULT_DERR,
+        DEFAULT_MAGERR
+    ]])
 
     X_scaled = scaler.transform(X_input)
     y_pred = xgb_model.predict(X_scaled)[0]
 
-    if hasattr(xgb_model, "predict_proba"):
-        proba = xgb_model.predict_proba(X_scaled)[0]
-    else:
-        proba = None
+    proba = xgb_model.predict_proba(X_scaled)[0] if hasattr(xgb_model, "predict_proba") else None
 
     return int(y_pred), proba
 
 
 # -----------------------------
-# UI Streamlit (Sidebar Input)
+# STREAMLIT UI
 # -----------------------------
-st.set_page_config(
-    page_title="Klasifikasi Kedalaman Gempa Bumi", layout="wide"
-)
+st.set_page_config(page_title="Prediksi Kedalaman Gempa", layout="wide")
 
-# ============================= SIDEBAR =============================
+# SIDEBAR (Input)
 st.sidebar.title("🌋 Input Parameter Gempa")
 
-year = st.sidebar.selectbox("Tahun Kejadian", YEARS, index=YEARS.index(2024))
+year = st.sidebar.selectbox("Tahun Kejadian", YEARS, index=len(YEARS) - 1)
 
 latitude = st.sidebar.slider(
     "Latitude",
     min_value=-10.0,
     max_value=10.0,
     value=-2.0,
-    step=0.01,
-    format="%.2f",
+    step=0.01
 )
 
 longitude = st.sidebar.slider(
@@ -114,8 +108,7 @@ longitude = st.sidebar.slider(
     min_value=90.0,
     max_value=150.0,
     value=120.0,
-    step=0.01,
-    format="%.2f",
+    step=0.01
 )
 
 mag = st.sidebar.slider(
@@ -123,8 +116,7 @@ mag = st.sidebar.slider(
     min_value=2.0,
     max_value=9.0,
     value=5.0,
-    step=0.1,
-    format="%.1f",
+    step=0.1
 )
 
 gap = st.sidebar.slider(
@@ -132,44 +124,38 @@ gap = st.sidebar.slider(
     min_value=0.0,
     max_value=360.0,
     value=100.0,
-    step=1.0,
-    format="%.0f",
+    step=1.0
 )
 
 predict_button = st.sidebar.button("🔍 Prediksi Sekarang")
 
-# ============================= MAIN PAGE =============================
+st.sidebar.caption("Parameter lain (RMS, Dmin, Error) diisi otomatis.")
+
+# -----------------------------
+# MAIN PAGE (Hasil Prediksi)
+# -----------------------------
 st.title("🔎 Prediksi Kelas Kedalaman Gempa Bumi")
 st.write(
     """
-Aplikasi ini memprediksi **kelas kedalaman gempa bumi** berdasarkan input sederhana
-(latitude, longitude, magnitudo, dan gap).  
-Model yang digunakan: **XGBoost**.
+Aplikasi ini memprediksi **kelas kedalaman gempa bumi** menggunakan model Machine Learning (XGBoost).  
+Silakan isi parameter di bagian **sidebar kiri**, lalu klik **Prediksi Sekarang**.
 """
 )
 
 st.markdown("---")
 
+# Menampilkan hasil ketika tombol diklik
 if predict_button:
-    y_pred, proba = predict_depth_class(
-        year, latitude, longitude, mag, gap
-    )
+    y_pred, proba = predict_depth_class(year, latitude, longitude, mag, gap)
 
     st.subheader("📌 Hasil Prediksi")
     st.write(f"**Kelas Prediksi:** `{y_pred}`")
-    st.write(f"**Interpretasi:** {CLASS_MAP.get(y_pred, 'Tidak diketahui')}")
+    st.write(f"**Interpretasi:** {CLASS_MAP.get(y_pred)}")
 
     if proba is not None:
-        st.subheader("📊 Probabilitas Tiap Kelas")
+        st.subheader("📊 Probabilitas Prediksi")
         for i, p in enumerate(proba):
-            st.write(
-                f"- **Kelas {i}** ({CLASS_MAP.get(i)}): **{p*100:.2f}%**"
-            )
-
-    st.info(
-        "Catatan: Hasil prediksi ini merupakan output model machine learning "
-        "dan bukan analisis resmi ahli seismologi."
-    )
+            st.write(f"- **Kelas {i}** ({CLASS_MAP[i]}): **{p*100:.2f}%**")
 
 else:
-    st.info("Masukkan data di sidebar, lalu klik **Prediksi Sekarang**.")
+    st.info("Isi parameter di sidebar, lalu klik **Prediksi Sekarang** untuk melihat hasil.")
