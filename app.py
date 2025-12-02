@@ -302,7 +302,27 @@ with tab1:
                 🧠 Kesimpulan
             </h4>
             <p style='font-size:16px; color:#1D3557;'>
-                {explanation}
+                if pred == 0:
+                    explanation = f"""
+                    Gempa dangkal (< 70 km) memiliki potensi kerusakan yang tinggi karena pusat gempa berada dekat dengan permukaan bumi. 
+                    Getaran biasanya terasa lebih kuat dan dapat menyebabkan dampak signifikan pada bangunan dan lingkungan sekitar. 
+                    Model memprediksi kategori ini dengan tingkat keyakinan {max_proba:.2f}%.
+                    """
+                
+                elif pred == 1:
+                    explanation = f"""
+                    Gempa menengah (70–300 km) memiliki dampak yang sedang. Getaran biasanya masih terasa, tetapi tidak sekuat gempa dangkal. 
+                    Karena berada lebih dalam, energi gempa sebagian teredam sebelum mencapai permukaan. 
+                    Model memberikan prediksi ini dengan tingkat keyakinan {max_proba:.2f}%.
+                    """
+                
+                else:
+                    explanation = f"""
+                    Gempa dalam (> 300 km) umumnya tidak menimbulkan kerusakan besar karena sumber gempa sangat jauh dari permukaan bumi. 
+                    Energi getaran sebagian besar teredam sebelum mencapai permukaan. 
+                    Model mengkategorikan gempa ini dengan tingkat keyakinan {max_proba:.2f}%.
+                    """
+
             </p>
         </div>
         """, unsafe_allow_html=True)
