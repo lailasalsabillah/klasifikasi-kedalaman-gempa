@@ -14,7 +14,7 @@ st.markdown("""
 <style>
 
 :root {
-    --primary-color: #2ecc71;
+    --primary-color: #3498db;
     --secondary-color: #16a085;
     --background: #f4fefb;
     --card-bg: #ffffff;
@@ -127,7 +127,7 @@ def predict_depth(year, lat, lon, mag, gap, dmin, rms, herr, magerr):
 # HEADER UTAMA
 # ============================================================
 st.markdown("<div class='header-title'>🌋 Klasifikasi Kedalaman Gempa</div>", unsafe_allow_html=True)
-st.markdown("<div class='header-sub'>XGBoost Earthquake Depth Classifier</div>", unsafe_allow_html=True)
+st.markdown("<div class='header-sub'>LSTM & XGBoost Earthquake Depth Classifier</div>", unsafe_allow_html=True)
 st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 
