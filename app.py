@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ============================================================
-# CUSTOM CSS – PALET WARNA NOMOR 2 (EARTHQUAKE THEME)
+# CUSTOM CSS 
 # ============================================================
 st.markdown("""
 <style>
@@ -133,29 +133,28 @@ st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 
 # ============================================================
-# SIDEBAR — FITUR + SUMBER DATA + INPUT
+# SIDEBAR
 # ============================================================
 st.sidebar.markdown("## ✨ Fitur:")
 st.sidebar.markdown("""
-- 📊 **Grafik Kedalaman**
-- 📋 **Tabel data lengkap**
-- 📥 **Download data CSV**
-- 🚨 **Peringatan gempa dangkal**
+- 📊 Grafik Kedalaman  
+- 📋 Tabel Data  
+- 📥 Download CSV  
+- 🚨 Peringatan Kedalaman  
 """)
 
 st.sidebar.markdown("---")
 
-# Sumber Data
 st.sidebar.markdown("## 📌 Sumber Data:")
 st.sidebar.markdown("""
-- 🌎 **USGS (United States Geological Survey)**
-- 🇮🇩 Area: **Indonesia**
-- 🔄 **Informasi Gempa**
+- 🌎 USGS  
+- 🇮🇩 Indonesia Region  
+- 🔄 Informasi Gempa  
 """)
 
 st.sidebar.markdown("---")
 
-# INPUT DATA
+# INPUT
 st.sidebar.markdown("## 🌍 Input Data Gempa")
 
 year = st.sidebar.selectbox("Tahun", YEARS)
@@ -172,34 +171,26 @@ btn = st.sidebar.button("🔍 Prediksi Sekarang")
 
 st.sidebar.markdown("---")
 
-# WARNING BASED ON DEPTH
+# WARNING
 if depth < 70:
     st.sidebar.markdown("""
-    <div style='padding:14px; background:#FDECEA; border-left:6px solid #E63946;
-                border-radius:10px; margin-bottom:10px;'>
-        <b>🚨 GEMPA DANGKAL!</b><br>
-        Kedalaman < 70 km terdeteksi.
+    <div style='padding:14px; background:#FDECEA; border-left:6px solid #E63946; border-radius:10px;'>
+        <b>🚨 GEMPA DANGKAL!</b><br>Kedalaman < 70 km terdeteksi.
     </div>
     """, unsafe_allow_html=True)
 else:
     st.sidebar.markdown(f"""
-    <div style='padding:14px; background:#FFF9DB; border-left:6px solid #F1C40F;
-                border-radius:10px; margin-bottom:10px;'>
-        <b>ℹ️ Kedalaman Aman</b><br>
-        Depth input: {depth} km
+    <div style='padding:14px; background:#FFF9DB; border-left:6px solid #F1C40F; border-radius:10px;'>
+        <b>ℹ️ Kedalaman Aman</b><br>Kedalaman: {depth} km
     </div>
     """, unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
 
-# Developer Box
 st.sidebar.markdown("""
-<div style='padding:14px; background:#E8F2FB;
-            border-radius:12px; text-align:center;'>
+<div style='padding:14px; background:#E8F2FB; border-radius:12px; text-align:center;'>
     <b>👩‍💻 Dibuat oleh:</b><br>
-    <span style='font-size:17px; color:#1D3557;'>
-        <b>Laila Salsabilla Hanifa - 202210715333</b>
-    </span>
+    <b>Laila Salsabilla Hanifa – 202210715333</b>
 </div>
 """, unsafe_allow_html=True)
 
@@ -211,7 +202,7 @@ tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi", "📊 Grafik", "📁 Info Dat
 
 
 # ============================================================
-# TAB 1 — HASIL PREDIKSI (versi urutan baru)
+# TAB 1 — HASIL PREDIKSI
 # ============================================================
 with tab1:
     if btn:
@@ -238,7 +229,6 @@ with tab1:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-
         # ===============================
         # 2. HASIL PREDIKSI
         # ===============================
@@ -253,7 +243,6 @@ with tab1:
         st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
         st.markdown("</div>", unsafe_allow_html=True)
 
-
         # ===============================
         # 3. PROBABILITAS PREDIKSI
         # ===============================
@@ -266,42 +255,61 @@ with tab1:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-
         # ===============================
-        # 4. PENJELASAN (DIPINDAH KE BAWAH)
+        # 4. KESIMPULAN
         # ===============================
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("🧠 Penjelasan Hasil Prediksi")
 
         max_proba = np.max(proba) * 100
 
         if pred == 0:
             explanation = f"""
-            **Gempa Dangkal (< 70 km)**  
-            - Berpotensi merusak karena pusat gempa dekat dengan permukaan.  
-            - Getaran dapat dirasakan lebih kuat.  
-            - Keyakinan model: **{max_proba:.2f}%**.
+            <b>Gempa Dangkal (&lt; 70 km)</b><br>
+            - Potensi kerusakan tinggi.<br>
+            - Getaran sangat kuat.<br>
+            - Keyakinan model: <b>{max_proba:.2f}%</b>.
             """
+            box_color = "#FDECEA"
+            border_color = "#E63946"
         elif pred == 1:
             explanation = f"""
-            **Gempa Intermediate (70–300 km)**  
-            - Dampak sedang, masih bisa menimbulkan getaran kuat.  
-            - Lebih dalam dari gempa dangkal, sehingga efeknya melemah.  
-            - Keyakinan model: **{max_proba:.2f}%**.
+            <b>Gempa Menengah (70–300 km)</b><br>
+            - Dampak sedang.<br>
+            - Getaran melemah.<br>
+            - Keyakinan model: <b>{max_proba:.2f}%</b>.
             """
+            box_color = "#FFF9DB"
+            border_color = "#F1C40F"
         else:
             explanation = f"""
-            **Gempa Dalam (> 300 km)**  
-            - Biasanya tidak berbahaya karena sangat jauh dari permukaan.  
-            - Energi merambat jauh sehingga getaran melemah.  
-            - Keyakinan model: **{max_proba:.2f}%**.
+            <b>Gempa Dalam (&gt; 300 km)</b><br>
+            - Efek minimal.<br>
+            - Energi getaran mereda.<br>
+            - Keyakinan model: <b>{max_proba:.2f}%</b>.
             """
+            box_color = "#E8F8F5"
+            border_color = "#2ECC71"
 
-        st.markdown(f"<p style='font-size:16px;'>{explanation}</p>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style='
+            background:{box_color};
+            border-left:6px solid {border_color};
+            padding:18px;
+            border-radius:12px;
+            margin-top:10px;
+            margin-bottom:20px;
+        '>
+            <h4 style='margin-bottom:10px; color:{border_color};'>
+                🧠 Kesimpulan
+            </h4>
+            <p style='font-size:16px; color:#1D3557;'>
+                {explanation}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
     else:
         st.info("👈 Masukkan input, lalu klik *Prediksi Sekarang*.")
+
 
 # ============================================================
 # TAB 2 — GRAFIK
@@ -326,54 +334,35 @@ with tab2:
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-    # ================================
-    # 🔵 HISTOGRAM KEDALAMAN
-    # ================================
+    # HISTOGRAM KEDALAMAN
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📊 Histogram Kedalaman Gempa")
 
     fig_hist, ax = plt.subplots(figsize=(6,4))
     sns.histplot(df["depth"], bins=30, kde=True, color="#457B9D", ax=ax)
-    ax.set_xlabel("Kedalaman (km)")
-    ax.set_ylabel("Frekuensi")
-    ax.set_title("Distribusi Kedalaman Gempa")
     st.pyplot(fig_hist)
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-    # ================================
-    # 🔵 SCATTER DEPTH VS MAG
-    # ================================
+    # SCATTER
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📌 Scatter Plot: Kedalaman vs Magnitudo")
 
     fig_scatter, ax2 = plt.subplots(figsize=(6,4))
     ax2.scatter(df["depth"], df["mag"], alpha=0.5, color="#E63946")
-    ax2.set_xlabel("Kedalaman (km)")
-    ax2.set_ylabel("Magnitudo")
-    ax2.set_title("Sebaran Kedalaman Terhadap Magnitudo")
     st.pyplot(fig_scatter)
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-    # ================================
-    # 🔵 BOXPLOT DEPTH
-    # ================================
+    # BOXPLOT
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📦 Boxplot Kedalaman Gempa")
 
     fig_box, ax3 = plt.subplots(figsize=(5,4))
     sns.boxplot(df["depth"], color="#A8DADC", ax=ax3)
-    ax3.set_xlabel("Kedalaman (km)")
-    ax3.set_title("Boxplot Sebaran Kedalaman Gempa")
     st.pyplot(fig_box)
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-
 # ============================================================
-# TAB 3 — INFO DATASET + DOWNLOAD CSV
+# TAB 3 — INFO DATASET
 # ============================================================
 with tab3:
 
@@ -383,20 +372,10 @@ with tab3:
     st.write("Jumlah data:", df.shape[0])
     st.write("Jumlah kolom:", df.shape[1])
     st.write("Tahun unik:", list(df["year"].unique()))
-
     st.dataframe(df.head())
 
-    # ============================
-    # 🔽 DOWNLOAD CSV
-    # ============================
+    # Download CSV
     csv = df.to_csv(index=False).encode('utf-8')
-
-    st.download_button(
-        label="📥 Download Dataset CSV",
-        data=csv,
-        file_name="dataset_gempa.csv",
-        mime="text/csv",
-        help="Klik untuk mengunduh dataset gempa"
-    )
+    st.download_button("📥 Download Dataset (CSV)", csv, "dataset_gempa.csv", "text/csv")
 
     st.markdown("</div>", unsafe_allow_html=True)
