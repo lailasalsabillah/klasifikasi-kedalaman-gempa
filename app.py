@@ -91,16 +91,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 # ============================================================
 # LOAD MODEL & DATASET
 # ============================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODELS_DIR = os.path.join(BASE_DIR,"models")
+MODELS_DIR = os.path.join(BASE_DIR, "models")
 
-scaler = joblib.load(os.path.join(MODELS_DIR,"scaler.pkl"))
-xgb_model = joblib.load(os.path.join(MODELS_DIR,"xgb_depth_class.pkl"))
+scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
+xgb_model = joblib.load(os.path.join(MODELS_DIR, "xgb_depth_class.pkl"))
 
-df = pd.read_csv(os.path.join(BASE_DIR,"dataset-gempa.csv"))
+df = pd.read_csv(os.path.join(BASE_DIR, "dataset-gempa.csv"))
 YEARS = sorted(df["year"].unique())
 
 CLASS_MAP = {
@@ -109,22 +110,22 @@ CLASS_MAP = {
     2: "Deep (> 300 km) – Relatif Aman"
 }
 
+
 # ============================================================
-# FUNGSI PREDIKSI
+# FUNGSI PREDIKSI (SINKRON DENGAN MODELING.PY)
 # ============================================================
-def predict_depth(year,lat,lon,mag,gap):
+def predict_depth(year, lat, lon, mag, gap):
     DEFAULTS = {
         "dmin": df["dmin"].mean(),
         "rms": df["rms"].mean(),
         "herr": df["horizontalError"].mean(),
-        "derr": df["depthError"].mean(),
-        "magerr": df["magError"].mean(),
+        "magerr": df["magError"].mean()
     }
 
-    X = np.array([[year,lat,lon,mag,gap,
-                   DEFAULTS["dmin"],DEFAULTS["rms"],
-                   DEFAULTS["herr"],DEFAULTS["derr"],
-                   DEFAULTS["magerr"]]])
+    # TOTAL 9 FITUR (SESUI AI TRAINING)
+    X = np.array([[year, lat, lon, mag, gap,
+                   DEFAULTS["dmin"], DEFAULTS["rms"],
+                   DEFAULTS["herr"], DEFAULTS["magerr"]]])
 
     X_scaled = scaler.transform(X)
     pred = xgb_model.predict(X_scaled)[0]
@@ -136,9 +137,9 @@ def predict_depth(year,lat,lon,mag,gap):
 # ============================================================
 # HEADER UTAMA
 # ============================================================
-st.markdown("<div class='header-title'>🌋 Klasifikasi Kedalaman Gempa </div>",unsafe_allow_html=True)
-st.markdown("<div class='header-sub'>LSTM – XGBoost Earthquake Depth Classifier</div>",unsafe_allow_html=True)
-st.markdown("<div class='divider'></div>",unsafe_allow_html=True)
+st.markdown("<div class='header-title'>🌋 Klasifikasi Kedalaman Gempa</div>", unsafe_allow_html=True)
+st.markdown("<div class='header-sub'>XGBoost Earthquake Depth Classifier</div>", unsafe_allow_html=True)
+st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 
 # ============================================================
@@ -147,18 +148,18 @@ st.markdown("<div class='divider'></div>",unsafe_allow_html=True)
 st.sidebar.title("🌍 Input Data Gempa")
 
 year = st.sidebar.selectbox("Tahun", YEARS)
-lat = st.sidebar.slider("Latitude",-12.0,8.0,-2.0)
-lon = st.sidebar.slider("Longitude",90.0,150.0,120.0)
-mag = st.sidebar.slider("Magnitudo",2.0,9.0,5.0)
-gap = st.sidebar.slider("Gap",0,360,100)
+lat = st.sidebar.slider("Latitude", -12.0, 8.0, -2.0)
+lon = st.sidebar.slider("Longitude", 90.0, 150.0, 120.0)
+mag = st.sidebar.slider("Magnitudo", 2.0, 9.0, 5.0)
+gap = st.sidebar.slider("Gap", 0, 360, 100)
 
 btn = st.sidebar.button("🔍 Prediksi Sekarang")
 
 
 # ============================================================
-# ======== TAB NAVIGASI (3 TAB)
+# ======== TAB NAVIGASI
 # ============================================================
-tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi","📊 Grafik","📁 Info Dataset"])
+tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi", "📊 Grafik", "📁 Info Dataset"])
 
 
 # ============================================================
@@ -167,28 +168,24 @@ tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi","📊 Grafik","📁 Info Datas
 with tab1:
     if btn:
         with st.spinner("⏳ Menganalisis data gempa..."):
-            pred, proba = predict_depth(year,lat,lon,mag,gap)
+            pred, proba = predict_depth(year, lat, lon, mag, gap)
 
-        st.markdown("<div class='card'>",unsafe_allow_html=True)
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📌 Hasil Prediksi Kedalaman Gempa")
 
-        st.write(f"""
-        <span class='badge badge-{pred}'>Kelas {pred}</span>
-        """,unsafe_allow_html=True)
-
+        st.write(f"<span class='badge badge-{pred}'>Kelas {pred}</span>", unsafe_allow_html=True)
         st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
-
-        st.markdown("</div>",unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
         # PROBABILITAS
-        st.markdown("<div class='card'>",unsafe_allow_html=True)
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📈 Probabilitas Kelas")
-        for i,p in enumerate(proba):
+        for i, p in enumerate(proba):
             st.write(f"- **Kelas {i}** ({CLASS_MAP[i]}): `{p*100:.2f}%`")
-        st.markdown("</div>",unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     else:
-        st.info("👈 Masukkan parameter gempa dan klik *Prediksi Sekarang*.")
+        st.info("👈 Masukkan input, lalu klik *Prediksi Sekarang*.")
 
 
 # ============================================================
@@ -196,73 +193,68 @@ with tab1:
 # ============================================================
 with tab2:
 
-    st.markdown("<div class='card'>",unsafe_allow_html=True)
-    st.subheader("📊 Plot Probabilitas (Plotly Style Tectonic)")
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📊 Probabilitas Kelas (Plotly)")
 
     if btn:
-        # Plotly bar chart
         fig = go.Figure()
-
         fig.add_trace(go.Bar(
-            x=["Kelas 0","Kelas 1","Kelas 2"],
+            x=["Kelas 0", "Kelas 1", "Kelas 2"],
             y=proba,
             marker=dict(
                 color=["#e74c3c","#f1c40f","#27ae60"],
-                line=dict(color="#0a3d3f",width=1.5)
+                line=dict(color="#0a3d3f", width=1.5)
             )
         ))
-
         fig.update_layout(
-            title="Probabilitas Prediksi Model",
-            xaxis_title="Kelas",
-            yaxis_title="Probabilitas",
+            title="Probabilitas Prediksi",
             template="plotly_white",
             plot_bgcolor="#f4fefb",
-            paper_bgcolor="#f4fefb"
+            paper_bgcolor="#f4fefb",
+            yaxis_title="Probabilitas"
         )
-
-        st.plotly_chart(fig,use_container_width=True)
-
+        st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("Grafik akan muncul setelah melakukan prediksi.")
+        st.warning("Grafik muncul setelah prediksi.")
 
-    st.markdown("</div>",unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    # Grafik Kedalaman per Tahun
-    st.markdown("<div class='card'>",unsafe_allow_html=True)
-    st.subheader("📈 Kedalaman Rata-rata per Tahun")
+    # Grafik Kedalaman Rata-rata Per Tahun
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📈 Depth Class Rata-rata per Tahun")
 
-    df_year_avg = df.groupby("year")["depthError"].mean().reset_index()
+    df_year_avg = df.groupby("year")["depth"].mean().reset_index()
 
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(
         x=df_year_avg["year"],
-        y=df_year_avg["depthError"],
+        y=df_year_avg["depth"],
         mode="lines+markers",
-        marker=dict(size=8,color="#16a085"),
-        line=dict(color="#1abc9c",width=3)
+        marker=dict(size=8, color="#16a085"),
+        line=dict(color="#1abc9c", width=3)
     ))
 
     fig2.update_layout(
-        title="Trend Kedalaman Rata-rata Gempa per Tahun",
+        title="Trend Kedalaman Rata-rata per Tahun",
         template="plotly_white",
         plot_bgcolor="#f4fefb",
         paper_bgcolor="#f4fefb",
         xaxis_title="Tahun",
-        yaxis_title="Kedalaman Rata-rata (km)"
+        yaxis_title="Kedalaman (km)"
     )
 
-    st.plotly_chart(fig2,use_container_width=True)
+    st.plotly_chart(fig2, use_container_width=True)
 
-    st.markdown("</div>",unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 # ============================================================
 # TAB 3 — INFO DATASET
 # ============================================================
 with tab3:
 
-    st.markdown("<div class='card'>",unsafe_allow_html=True)
-    st.subheader("📁 Informasi Dataset Gempa")
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📁 Informasi Dataset")
 
     st.write("Jumlah data:", df.shape[0])
     st.write("Jumlah kolom:", df.shape[1])
@@ -270,4 +262,4 @@ with tab3:
 
     st.dataframe(df.head())
 
-    st.markdown("</div>",unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
