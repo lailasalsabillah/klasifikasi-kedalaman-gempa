@@ -148,9 +148,9 @@ st.sidebar.markdown("---")
 # Sumber Data
 st.sidebar.markdown("## 📌 Sumber Data:")
 st.sidebar.markdown("""
-- 🌎 **USGS (United States Geological Survey(Bagian Indonesia))**
+- 🌎 **USGS (United States Geological Survey)**
 - 🇮🇩 Area: **Indonesia**
-- 🔄 Update: **Realtime**
+- 🔄 Update: **Informasi Gempa**
 """)
 
 st.sidebar.markdown("---")
