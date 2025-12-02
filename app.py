@@ -242,6 +242,7 @@ with tab1:
         st.write(f"- **Latitude:** {lat}")
         st.write(f"- **Longitude:** {lon}")
         st.write(f"- **Kedalaman:** {depth} km")
+
     with col2:
         st.write(f"- **Gap:** {gap}")
         st.write(f"- **Dmin:** {dmin}")
@@ -293,7 +294,7 @@ with tab1:
 
     elif pred == 1:
         explanation = f"""
-        Gempa menengah (70–300 km) memiliki dampak yang sedang. Getaran biasanya masih terasa, tetapi tidak sekuat gempa dangkal. 
+        Gempa menengah (70–300 km) memiliki dampak yang sedang. Getaran masih terasa, tetapi tidak sekuat gempa dangkal. 
         Karena berada lebih dalam, energi gempa sebagian teredam sebelum mencapai permukaan. 
         Model memberikan prediksi ini dengan tingkat keyakinan {max_proba:.2f}%.
         """
@@ -302,16 +303,16 @@ with tab1:
 
     else:
         explanation = f"""
-        Gempa dalam (> 300 km) umumnya tidak menimbulkan kerusakan besar karena sumber gempa sangat jauh dari permukaan bumi. 
-        Energi getaran sebagian besar teredam sebelum mencapai permukaan sehingga getarannya melemah. 
+        Gempa dalam (> 300 km) umumnya tidak menimbulkan kerusakan besar karena pusat gempa sangat jauh dari permukaan. 
+        Energi getaran banyak teredam sebelum mencapai permukaan, sehingga dampaknya lebih kecil. 
         Model mengkategorikan gempa ini dengan tingkat keyakinan {max_proba:.2f}%.
         """
         box_color = "#E8F8F5"
         border_color = "#2ECC71"
 
-    # ===== TAMPILKAN KOTAK KESIMPULAN =====
-   st.markdown(f"""
-   <div class="fade-in" style='
+    # ===== TAMPILKAN KOTAK KESIMPULAN (FIXED) =====
+    st.markdown(f"""
+    <div class="fade-in" style='
         background:{box_color};
         border-left:8px solid {border_color};
         padding:24px;
