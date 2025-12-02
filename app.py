@@ -297,5 +297,22 @@ with tab3:
     st.write("Jumlah kolom:", df.shape[1])
     st.write("Tahun unik:", list(df["year"].unique()))
 
+    # Tampilkan tabel
     st.dataframe(df.head())
+
+    # ============================
+    # DOWNLOAD CSV
+    # ============================
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    csv = df.to_csv(index=False).encode('utf-8')
+
+    st.download_button(
+        label="📥 Download Dataset CSV",
+        data=csv,
+        file_name="dataset_gempa.csv",
+        mime="text/csv",
+        help="Klik untuk mengunduh seluruh dataset dalam format CSV"
+    )
+
     st.markdown("</div>", unsafe_allow_html=True)
