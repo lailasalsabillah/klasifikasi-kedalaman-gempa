@@ -230,20 +230,21 @@ with tab2:
 
     # Grafik Magnitudo per Tahun
     st.markdown("<div class='card'>",unsafe_allow_html=True)
-    st.subheader("📈 Rata-rata Magnitudo per Tahun")
+    st.subheader("📈 Kedalaman Rata-rata per Tahun")
 
     df_year_avg = df.groupby("year")["depth"].mean().reset_index()
 
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(
         x=df_year_avg["year"],
-        y=df_year_avg["mag"],
+        y=df_year_avg["depth"],
         mode="lines+markers",
         marker=dict(size=8,color="#16a085"),
         line=dict(color="#1abc9c",width=3)
     ))
 
     fig2.update_layout(
+        title="Trend Kedalaman Rata-rata Gempa per Tahun",
         template="plotly_white",
         plot_bgcolor="#f4fefb",
         paper_bgcolor="#f4fefb",
