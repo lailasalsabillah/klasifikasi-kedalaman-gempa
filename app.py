@@ -351,15 +351,6 @@ with tab2:
     st.pyplot(fig_scatter)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # BOXPLOT
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("📦 Boxplot Kedalaman Gempa")
-
-    fig_box, ax3 = plt.subplots(figsize=(5,4))
-    sns.boxplot(df["depth"], color="#A8DADC", ax=ax3)
-    st.pyplot(fig_box)
-    st.markdown("</div>", unsafe_allow_html=True)
-
 # ============================================================
 # TAB 3 — INFO DATASET
 # ============================================================
