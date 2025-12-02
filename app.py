@@ -14,7 +14,7 @@ st.markdown("""
 <style>
 
 :root {
-    --primary-color: #1abc9c;
+    --primary-color: #2ecc71;
     --secondary-color: #16a085;
     --background: #f4fefb;
     --card-bg: #ffffff;
