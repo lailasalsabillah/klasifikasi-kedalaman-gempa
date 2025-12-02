@@ -136,8 +136,8 @@ def predict_depth(year,lat,lon,mag,gap):
 # ============================================================
 # HEADER UTAMA
 # ============================================================
-st.markdown("<div class='header-title'>🌋 Prediksi Kedalaman Gempa Tektonik</div>",unsafe_allow_html=True)
-st.markdown("<div class='header-sub'>Machine Learning – XGBoost Earthquake Depth Classifier</div>",unsafe_allow_html=True)
+st.markdown("<div class='header-title'>🌋 Klasifikasi Kedalaman Gempa </div>",unsafe_allow_html=True)
+st.markdown("<div class='header-sub'>LSTM – XGBoost Earthquake Depth Classifier</div>",unsafe_allow_html=True)
 st.markdown("<div class='divider'></div>",unsafe_allow_html=True)
 
 
