@@ -200,136 +200,115 @@ st.sidebar.markdown("""
 # ============================================================
 tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi", "📊 Grafik", "📁 Info Dataset"])
 
-
 # ============================================================
-# TAB 1 — HASIL PREDIKSI
+# TAB 1 — HASIL PREDIKSI 
 # ============================================================
 with tab1:
-    if btn:
-        pred, proba = predict_depth(year, lat, lon, depth, gap, dmin, rms, herr, magerr)
 
-        # ===============================
-        # 1. RINGKASAN INPUT
-        # ===============================
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("📝 Ringkasan Input Pengguna")
+    if not btn:
+        st.info("👈 Masukkan input pada sidebar, lalu klik *Prediksi Sekarang*.")
+        st.stop()
 
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write(f"- **Tahun:** {year}")
-            st.write(f"- **Latitude:** {lat}")
-            st.write(f"- **Longitude:** {lon}")
-            st.write(f"- **Kedalaman:** {depth} km")
-        with col2:
-            st.write(f"- **Gap:** {gap}")
-            st.write(f"- **Dmin:** {dmin}")
-            st.write(f"- **RMS:** {rms}")
-            st.write(f"- **Horizontal Error:** {herr}")
-            st.write(f"- **Magnitude Error:** {magerr}")
+    # ===== JALANKAN MODEL =====
+    pred, proba = predict_depth(year, lat, lon, depth, gap, dmin, rms, herr, magerr)
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    # ============================================================
+    # 1. RINGKASAN INPUT
+    # ============================================================
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📝 Ringkasan Input Pengguna")
 
-        # ===============================
-        # 2. HASIL PREDIKSI
-        # ===============================
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("🎯 Hasil Prediksi Kedalaman Gempa")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"- **Tahun:** {year}")
+        st.write(f"- **Latitude:** {lat}")
+        st.write(f"- **Longitude:** {lon}")
+        st.write(f"- **Kedalaman:** {depth} km")
+    with col2:
+        st.write(f"- **Gap:** {gap}")
+        st.write(f"- **Dmin:** {dmin}")
+        st.write(f"- **RMS:** {rms}")
+        st.write(f"- **Horizontal Error:** {herr}")
+        st.write(f"- **Magnitude Error:** {magerr}")
 
-        st.markdown(
-            f"<span class='badge badge-{pred}' style='font-size:20px;'>Kelas {pred}</span>",
-            unsafe_allow_html=True
-        )
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
-        st.markdown("</div>", unsafe_allow_html=True)
+    # ============================================================
+    # 2. HASIL PREDIKSI
+    # ============================================================
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("🎯 Hasil Prediksi Kedalaman Gempa")
 
-        # ===============================
-        # 3. PROBABILITAS PREDIKSI
-        # ===============================
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("📈 Probabilitas Prediksi")
-        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<span class='badge badge-{pred}' style='font-size:22px;'>Kelas {pred}</span>",
+        unsafe_allow_html=True
+    )
+    st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        for i, p in enumerate(proba):
-            st.write(f"**Kelas {i}** — {CLASS_MAP[i]}: `{p*100:.2f}%`")
+    # ============================================================
+    # 3. PROBABILITAS PREDIKSI
+    # ============================================================
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📈 Probabilitas Prediksi")
+    st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    for i, p in enumerate(proba):
+        st.write(f"**Kelas {i}** — {CLASS_MAP[i]}: `{p*100:.2f}%`")
 
-        # ===============================
-        # 4. KESIMPULAN
-        # ===============================
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        max_proba = np.max(proba) * 100
+    # ============================================================
+    # 4. KESIMPULAN (PARAGRAF DALAM KOTAK)
+    # ============================================================
+    max_proba = np.max(proba) * 100
 
-        if pred == 0:
-            explanation = f"""
-            <b>Gempa Dangkal (&lt; 70 km)</b><br>
-            - Potensi kerusakan tinggi.<br>
-            - Getaran sangat kuat.<br>
-            - Keyakinan model: <b>{max_proba:.2f}%</b>.
-            """
-            box_color = "#FDECEA"
-            border_color = "#E63946"
-        elif pred == 1:
-            explanation = f"""
-            <b>Gempa Menengah (70–300 km)</b><br>
-            - Dampak sedang.<br>
-            - Getaran melemah.<br>
-            - Keyakinan model: <b>{max_proba:.2f}%</b>.
-            """
-            box_color = "#FFF9DB"
-            border_color = "#F1C40F"
-        else:
-            explanation = f"""
-            <b>Gempa Dalam (&gt; 300 km)</b><br>
-            - Efek minimal.<br>
-            - Energi getaran mereda.<br>
-            - Keyakinan model: <b>{max_proba:.2f}%</b>.
-            """
-            box_color = "#E8F8F5"
-            border_color = "#2ECC71"
+    # ===== GENERATE PARAGRAF KESIMPULAN =====
+    if pred == 0:
+        explanation = f"""
+        Gempa dangkal (< 70 km) memiliki potensi kerusakan yang tinggi karena pusat gempa berada dekat dengan permukaan bumi. 
+        Getaran biasanya terasa lebih kuat dan dapat menyebabkan dampak signifikan pada bangunan dan lingkungan sekitar. 
+        Model memprediksi kategori ini dengan tingkat keyakinan {max_proba:.2f}%.
+        """
+        box_color = "#FDECEA"
+        border_color = "#E63946"
 
-        st.markdown(f"""
-        <div style='
-            background:{box_color};
-            border-left:6px solid {border_color};
-            padding:18px;
-            border-radius:12px;
-            margin-top:10px;
-            margin-bottom:20px;
-        '>
-            <h4 style='margin-bottom:10px; color:{border_color};'>
-                🧠 Kesimpulan
-            </h4>
-            <p style='font-size:16px; color:#1D3557;'>
-                if pred == 0:
-                    explanation = f"""
-                    Gempa dangkal (< 70 km) memiliki potensi kerusakan yang tinggi karena pusat gempa berada dekat dengan permukaan bumi. 
-                    Getaran biasanya terasa lebih kuat dan dapat menyebabkan dampak signifikan pada bangunan dan lingkungan sekitar. 
-                    Model memprediksi kategori ini dengan tingkat keyakinan {max_proba:.2f}%.
-                    """
-                
-                elif pred == 1:
-                    explanation = f"""
-                    Gempa menengah (70–300 km) memiliki dampak yang sedang. Getaran biasanya masih terasa, tetapi tidak sekuat gempa dangkal. 
-                    Karena berada lebih dalam, energi gempa sebagian teredam sebelum mencapai permukaan. 
-                    Model memberikan prediksi ini dengan tingkat keyakinan {max_proba:.2f}%.
-                    """
-                
-                else:
-                    explanation = f"""
-                    Gempa dalam (> 300 km) umumnya tidak menimbulkan kerusakan besar karena sumber gempa sangat jauh dari permukaan bumi. 
-                    Energi getaran sebagian besar teredam sebelum mencapai permukaan. 
-                    Model mengkategorikan gempa ini dengan tingkat keyakinan {max_proba:.2f}%.
-                    """
-
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+    elif pred == 1:
+        explanation = f"""
+        Gempa menengah (70–300 km) memiliki dampak yang sedang. Getaran biasanya masih terasa, tetapi tidak sekuat gempa dangkal. 
+        Karena berada lebih dalam, energi gempa sebagian teredam sebelum mencapai permukaan. 
+        Model memberikan prediksi ini dengan tingkat keyakinan {max_proba:.2f}%.
+        """
+        box_color = "#FFF9DB"
+        border_color = "#F1C40F"
 
     else:
-        st.info("👈 Masukkan input, lalu klik *Prediksi Sekarang*.")
+        explanation = f"""
+        Gempa dalam (> 300 km) umumnya tidak menimbulkan kerusakan besar karena sumber gempa sangat jauh dari permukaan bumi. 
+        Energi getaran sebagian besar teredam sebelum mencapai permukaan sehingga getarannya melemah. 
+        Model mengkategorikan gempa ini dengan tingkat keyakinan {max_proba:.2f}%.
+        """
+        box_color = "#E8F8F5"
+        border_color = "#2ECC71"
 
+    # ===== TAMPILKAN KOTAK KESIMPULAN =====
+    st.markdown(f"""
+    <div style='
+        background:{box_color};
+        border-left:6px solid {border_color};
+        padding:20px;
+        border-radius:15px;
+        margin-top:10px;
+        margin-bottom:25px;
+    '>
+        <h4 style='margin-bottom:10px; color:{border_color};'>
+            🧠 Kesimpulan
+        </h4>
+        <p style='font-size:16px; color:#1D3557; line-height:1.7; text-align:justify;'>
+            {explanation}
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ============================================================
 # TAB 2 — GRAFIK
