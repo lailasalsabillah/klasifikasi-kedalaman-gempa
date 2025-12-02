@@ -5,6 +5,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # ============================================================
 # CUSTOM CSS – TEMA TECTONIC MODERN
@@ -98,6 +99,7 @@ st.markdown("""
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
 
+# pastikan nama file sesuai dengan yang ada di folder models
 scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
 xgb_model = joblib.load(os.path.join(MODELS_DIR, "xgb_depth_class.pkl"))
 
@@ -114,17 +116,13 @@ CLASS_MAP = {
 # ============================================================
 # FUNGSI PREDIKSI (SINKRON DENGAN MODELING.PY)
 # ============================================================
-def predict_depth(year, lat, lon, mag, gap):
-    DEFAULTS = {
-        "dmin": df["dmin"].mean(),
-        "rms": df["rms"].mean(),
-        "herr": df["horizontalError"].mean(),
-        "magerr": df["magError"].mean()
-    }
-
+def predict_depth(year, lat, lon, mag, gap, dmin, rms, herr, magerr):
+    """
+    Total 9 fitur:
+    year, lat, lon, mag, gap, dmin, rms, horizontalError, magError
+    """
     X = np.array([[year, lat, lon, mag, gap,
-                   DEFAULTS["dmin"], DEFAULTS["rms"],
-                   DEFAULTS["herr"], DEFAULTS["magerr"]]])
+                   dmin, rms, herr, magerr]])
 
     X_scaled = scaler.transform(X)
     pred = xgb_model.predict(X_scaled)[0]
@@ -160,7 +158,7 @@ btn = st.sidebar.button("🔍 Prediksi Sekarang")
 
 
 # ============================================================
-# TABS
+# TAB NAVIGASI
 # ============================================================
 tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi", "📊 Grafik", "📁 Info Dataset"])
 
@@ -171,39 +169,50 @@ tab1, tab2, tab3 = st.tabs(["🔮 Hasil Prediksi", "📊 Grafik", "📁 Info Dat
 with tab1:
     if btn:
         with st.spinner("⏳ Menganalisis data gempa..."):
-            pred, proba = predict_depth(year, lat, lon, mag, gap)
+            pred, proba = predict_depth(year, lat, lon, mag, gap, dmin, rms, herr, magerr)
 
-        # ===================== HASIL PREDIKSI =====================
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("📌 Hasil Prediksi Kedalaman Gempa")
-
-        st.write(f"<span class='badge badge-{pred}'>Kelas {pred}</span>", unsafe_allow_html=True)
-        st.write(f"**Interpretasi:** {CLASS_MAP[pred]}")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # ===================== RINGKASAN INPUT =====================
+        # =============== RINGKASAN INPUT (FIRST CARD) ===============
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("📝 Ringkasan Input Pengguna")
 
-        st.write(f"""
-        - **Tahun**: {year}  
-        - **Latitude**: {lat}  
-        - **Longitude**: {lon}  
-        - **Magnitudo**: {mag}  
-        - **Gap**: {gap}  
-        - **Dmin**: {dmin}  
-        - **RMS**: {rms}  
-        - **Horizontal Error**: {herr}  
-        - **Magnitude Error**: {magerr}  
-        """)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"- **Tahun:** {year}")
+            st.write(f"- **Latitude:** {lat}")
+            st.write(f"- **Longitude:** {lon}")
+            st.write(f"- **Magnitudo:** {mag}")
+        with col2:
+            st.write(f"- **Gap:** {gap}")
+            st.write(f"- **Dmin:** {dmin}")
+            st.write(f"- **RMS:** {rms}")
+            st.write(f"- **Horizontal Error:** {herr}")
+            st.write(f"- **Magnitude Error:** {magerr}")
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # ===================== PROBABILITAS =====================
+        # =============== HASIL PREDIKSI (SECOND CARD) ===============
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("📈 Probabilitas Kelas")
+        st.subheader("🎯 Hasil Prediksi Kedalaman Gempa")
+
+        st.markdown(
+            f"<span class='badge badge-{pred}' style='font-size:20px;'>Kelas {pred}</span>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            f"<p style='font-size:17px; margin-top:10px;'><b>Interpretasi:</b> {CLASS_MAP[pred]}</p>",
+            unsafe_allow_html=True
+        )
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # =============== PROBABILITAS (THIRD CARD) ===============
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("📈 Probabilitas Prediksi")
+        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+
         for i, p in enumerate(proba):
-            st.write(f"- **Kelas {i}** ({CLASS_MAP[i]}): `{p*100:.2f}%`")
+            st.write(f"**Kelas {i}** — {CLASS_MAP[i]}: `{p*100:.2f}%`")
+
         st.markdown("</div>", unsafe_allow_html=True)
 
     else:
@@ -215,6 +224,7 @@ with tab1:
 # ============================================================
 with tab2:
 
+    # Probabilitas kelas (Plotly)
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📊 Probabilitas Kelas (Plotly)")
 
@@ -224,7 +234,7 @@ with tab2:
             x=["Kelas 0", "Kelas 1", "Kelas 2"],
             y=proba,
             marker=dict(
-                color=["#e74c3c","#f1c40f","#27ae60"],
+                color=["#e74c3c", "#f1c40f", "#27ae60"],
                 line=dict(color="#0a3d3f", width=1.5)
             )
         ))
@@ -237,13 +247,13 @@ with tab2:
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("Grafik muncul setelah prediksi.")
+        st.warning("Grafik probabilitas akan muncul setelah prediksi dilakukan.")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Grafik Kedalaman Rata-rata Per Tahun
+    # Grafik kedalaman rata-rata per tahun
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("📈 Depth Class Rata-rata per Tahun")
+    st.subheader("📈 Depth Rata-rata per Tahun")
 
     df_year_avg = df.groupby("year")["depth"].mean().reset_index()
 
@@ -255,7 +265,6 @@ with tab2:
         marker=dict(size=8, color="#16a085"),
         line=dict(color="#1abc9c", width=3)
     ))
-
     fig2.update_layout(
         title="Trend Kedalaman Rata-rata per Tahun",
         template="plotly_white",
@@ -271,10 +280,11 @@ with tab2:
 
 
 # ============================================================
-# TAB 3 — INFO DATASET
+# TAB 3 — INFO DATASET + GRAFIK GAMBAR
 # ============================================================
 with tab3:
 
+    # Info dataset
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📁 Informasi Dataset")
 
@@ -285,13 +295,11 @@ with tab3:
     st.dataframe(df.head())
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-    # Gambar: Distribusi Kelas
+    # Distribusi kelas kedalaman
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("🖼️ Distribusi Kelas Kedalaman")
 
-    import seaborn as sns
-    fig1, ax = plt.subplots(figsize=(6,4))
+    fig1, ax = plt.subplots(figsize=(6, 4))
     sns.countplot(x=df["depth_class"], palette="viridis", ax=ax)
     ax.set_title("Distribusi Depth Class")
     ax.set_xlabel("Kelas")
@@ -299,12 +307,11 @@ with tab3:
     st.pyplot(fig1)
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-    # Gambar: Histogram Magnitudo
+    # Histogram magnitudo
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("🖼️ Histogram Magnitudo")
 
-    fig2, ax2 = plt.subplots(figsize=(6,4))
+    fig2, ax2 = plt.subplots(figsize=(6, 4))
     sns.histplot(df["mag"], bins=30, kde=True, color="#1abc9c", ax=ax2)
     ax2.set_title("Distribusi Magnitudo Gempa")
     ax2.set_xlabel("Magnitudo")
@@ -312,12 +319,11 @@ with tab3:
     st.pyplot(fig2)
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-    # Gambar: Scatter lokasi
+    # Sebaran lokasi gempa
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("🖼️ Sebaran Lokasi Gempa")
+    st.subheader("🖼️ Sebaran Lokasi Gempa (Latitude–Longitude)")
 
-    fig3, ax3 = plt.subplots(figsize=(6,5))
+    fig3, ax3 = plt.subplots(figsize=(6, 5))
     ax3.scatter(df["longitude"], df["latitude"], s=8, alpha=0.5, color="#e67e22")
     ax3.set_title("Sebaran Lokasi Gempa")
     ax3.set_xlabel("Longitude")
@@ -325,14 +331,13 @@ with tab3:
     st.pyplot(fig3)
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-    # Gambar: Depth per tahun
+    # Rata-rata kedalaman per tahun (matplotlib)
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("🖼️ Rata-rata Kedalaman per Tahun")
 
     df_year_avg = df.groupby("year")["depth"].mean().reset_index()
 
-    fig4, ax4 = plt.subplots(figsize=(6,4))
+    fig4, ax4 = plt.subplots(figsize=(6, 4))
     ax4.plot(df_year_avg["year"], df_year_avg["depth"],
              marker="o", color="#16a085", linewidth=3)
     ax4.set_title("Rata-rata Kedalaman Gempa per Tahun")
