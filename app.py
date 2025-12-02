@@ -137,8 +137,7 @@ st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 st.sidebar.markdown("## ✨ Fitur:")
 st.sidebar.markdown("""
-- 🗺️ **Peta interaktif**
-- 📊 **Filter magnitudo**
+- 📊 **Grafik Kedalaman**
 - 📋 **Tabel data lengkap**
 - 📥 **Download data CSV**
 - 🚨 **Peringatan gempa besar**
@@ -149,7 +148,7 @@ st.sidebar.markdown("---")
 # Sumber Data
 st.sidebar.markdown("## 📌 Sumber Data:")
 st.sidebar.markdown("""
-- 🌎 **USGS (United States Geological Survey)**
+- 🌎 **USGS (United States Geological Survey(Bagian Indonesia))**
 - 🇮🇩 Area: **Indonesia**
 - 🔄 Update: **Realtime**
 """)
@@ -198,7 +197,7 @@ st.sidebar.markdown("""
 <div style='padding:14px; background:#e8f9f5; border-radius:12px; text-align:center;'>
     <b>👩‍💻 Dibuat oleh:</b><br>
     <span style='font-size:17px; color:#0a3d3f;'>
-        <b>Laila Salsabillah</b>
+        <b>Laila Salsabilla Hanifa-202210715333</b>
     </span>
 </div>
 """, unsafe_allow_html=True)
@@ -227,8 +226,8 @@ with tab1:
             st.write(f"- **Latitude:** {lat}")
             st.write(f"- **Longitude:** {lon}")
             st.write(f"- **Magnitudo:** {mag}")
-        with col2:
             st.write(f"- **Gap:** {gap}")
+        with col2:
             st.write(f"- **Dmin:** {dmin}")
             st.write(f"- **RMS:** {rms}")
             st.write(f"- **Horizontal Error:** {herr}")
