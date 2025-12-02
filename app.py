@@ -137,7 +137,8 @@ st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 st.sidebar.markdown("## ✨ Fitur:")
 st.sidebar.markdown("""
-- 📊 **Filter kealaman(depth)**
+- 🗺️ **Peta interaktif**
+- 📊 **Filter magnitudo**
 - 📋 **Tabel data lengkap**
 - 📥 **Download data CSV**
 - 🚨 **Peringatan gempa besar**
@@ -148,7 +149,7 @@ st.sidebar.markdown("---")
 # Sumber Data
 st.sidebar.markdown("## 📌 Sumber Data:")
 st.sidebar.markdown("""
-- 🌎 **USGS (United States Geological Survey(Bagian Indonesia))**
+- 🌎 **USGS (United States Geological Survey)**
 - 🇮🇩 Area: **Indonesia**
 - 🔄 Update: **Realtime**
 """)
@@ -168,7 +169,7 @@ rms  = st.sidebar.slider("RMS", 0.0, 2.0, 0.5)
 herr = st.sidebar.slider("Horizontal Error", 0.0, 30.0, 5.0)
 magerr = st.sidebar.slider("Magnitude Error", 0.0, 0.5, 0.05)
 
-btn = st.sidebar.button("🔍 Prediksi Klasifikasi Sekarang")
+btn = st.sidebar.button("🔍 Prediksi Sekarang")
 
 st.sidebar.markdown("---")
 
@@ -197,7 +198,7 @@ st.sidebar.markdown("""
 <div style='padding:14px; background:#e8f9f5; border-radius:12px; text-align:center;'>
     <b>👩‍💻 Dibuat oleh:</b><br>
     <span style='font-size:17px; color:#0a3d3f;'>
-        <b>Laila Salsabilla Hanfa-202210715333</b>
+        <b>Laila Salsabillah</b>
     </span>
 </div>
 """, unsafe_allow_html=True)
@@ -236,7 +237,7 @@ with tab1:
         st.markdown("</div>", unsafe_allow_html=True)
 
         # HASIL PREDIKSI
-          st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.subheader("🎯 Hasil Prediksi Kedalaman Gempa")
 
         st.markdown(
