@@ -152,6 +152,10 @@ lat = st.sidebar.slider("Latitude", -12.0, 8.0, -2.0)
 lon = st.sidebar.slider("Longitude", 90.0, 150.0, 120.0)
 mag = st.sidebar.slider("Magnitudo", 2.0, 9.0, 5.0)
 gap = st.sidebar.slider("Gap", 0, 360, 100)
+dmin = st.sidebar.slider("Dmin", 0.0, 20.0, 5.0)
+rms = st.sidebar.slider("RMS", 0.0, 2.0, 0.5)
+herr = st.sidebar.slider("Horizontal Error", 0.0, 30.0, 5.0)
+magerr = st.sidebar.slider("Magnitude Error", 0.0, 0.5, 0.05)
 
 btn = st.sidebar.button("🔍 Prediksi Sekarang")
 
