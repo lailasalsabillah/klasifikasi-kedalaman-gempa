@@ -6,33 +6,32 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # -----------------------------
-# Konfigurasi Direktori Model
+# Konfigurasi Direktori
 # -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
 
 SCALER_PATH = os.path.join(MODELS_DIR, "scaler.pkl")
 XGB_PATH = os.path.join(MODELS_DIR, "xgb_depth_class.pkl")
-DATASET_PATH = os.path.join(BASE_DIR, "dataset_gempa.csv")
+DATASET_PATH = os.path.join(BASE_DIR, "dataset-gempa.csv")
 
 # -----------------------------
-# Cek file model
+# Load Model
 # -----------------------------
 if not os.path.exists(SCALER_PATH):
-    raise FileNotFoundError("File scaler.pkl tidak ditemukan. Jalankan modeling.py terlebih dahulu.")
+    raise FileNotFoundError("❌ scaler.pkl tidak ditemukan. Jalankan modeling.py dulu.")
 
 if not os.path.exists(XGB_PATH):
-    raise FileNotFoundError("File xgb_depth_class.pkl tidak ditemukan. Jalankan modeling.py terlebih dahulu.")
+    raise FileNotFoundError("❌ xgb_depth_class.pkl tidak ditemukan. Jalankan modeling.py dulu.")
 
-# Load model dan scaler
 scaler = joblib.load(SCALER_PATH)
 xgb_model = joblib.load(XGB_PATH)
 
 # -----------------------------
-# Load dataset untuk membaca tahun
+# Load Dataset (ambil tahun)
 # -----------------------------
 if not os.path.exists(DATASET_PATH):
-    raise FileNotFoundError("dataset-gempa.csv tidak ditemukan.")
+    raise FileNotFoundError("❌ dataset-gempa.csv tidak ditemukan.")
 
 df_year = pd.read_csv(DATASET_PATH)
 
@@ -52,13 +51,12 @@ CLASS_MAP = {
     2: "Deep (> 300 km) - Relatif lebih aman",
 }
 
-# Nilai default fitur lain
+# nilai default fitur lain
 DEFAULT_DMIN = 0.1
 DEFAULT_RMS = 0.8
 DEFAULT_HERR = 5.0
 DEFAULT_DERR = 5.0
 DEFAULT_MAGERR = 0.1
-
 
 # -----------------------------
 # Fungsi Prediksi
@@ -80,40 +78,46 @@ def predict_depth_class(year, latitude, longitude, mag, gap):
     X_scaled = scaler.transform(X_input)
     y_pred = xgb_model.predict(X_scaled)[0]
 
-    proba = xgb_model.predict_proba(X_scaled)[0] if hasattr(xgb_model, "predict_proba") else None
+    proba = (
+        xgb_model.predict_proba(X_scaled)[0]
+        if hasattr(xgb_model, "predict_proba")
+        else None
+    )
 
     return int(y_pred), proba
-
 
 # -----------------------------
 # STREAMLIT UI
 # -----------------------------
 st.set_page_config(page_title="Prediksi Kedalaman Gempa", layout="wide")
 
-# ====================== SIDEBAR INPUT ======================
+# -----------------------------
+# SIDEBAR INPUT
+# -----------------------------
 st.sidebar.title("🌋 Input Parameter Gempa")
 
-year = st.sidebar.selectbox("Tahun Kejadian", YEARS, index=len(YEARS) - 1)
-
+year = st.sidebar.selectbox("Tahun Kejadian", YEARS, index=len(YEARS)-1)
 latitude = st.sidebar.slider("Latitude", -10.0, 10.0, -2.0, 0.01)
 longitude = st.sidebar.slider("Longitude", 90.0, 150.0, 120.0, 0.01)
 mag = st.sidebar.slider("Magnitudo (Mw)", 2.0, 9.0, 5.0, 0.1)
 gap = st.sidebar.slider("Gap", 0.0, 360.0, 100.0, 1.0)
 
 predict_button = st.sidebar.button("🔍 Prediksi Sekarang")
+st.sidebar.caption("Parameter lain seperti RMS, Dmin, Error diisi otomatis.")
 
-st.sidebar.caption("Parameter lain diisi otomatis (Dmin, RMS, Error).")
-
-
-# ====================== MAIN PAGE ======================
-st.title("🔎 Prediksi Kelas Kedalaman Gempa Bumi")
-st.markdown("""
-Aplikasi ini memprediksi **kelas kedalaman gempa bumi** menggunakan model Machine Learning (XGBoost).
-Silakan isi parameter di sidebar kiri kemudian klik **Prediksi Sekarang**.
+# -----------------------------
+# MAIN PAGE
+# -----------------------------
+st.title("🔎 Prediksi Kedalaman Gempa Bumi")
+st.write("""
+Aplikasi ini memprediksi **kelas kedalaman gempa bumi** menggunakan model XGBoost.
+Isi parameter di sidebar kiri lalu klik *Prediksi Sekarang*.
 """)
 st.markdown("---")
 
-# ===================== HASIL PREDIKSI =====================
+# =========================================================
+# ==================== HASIL PREDIKSI =====================
+# =========================================================
 if predict_button:
     y_pred, proba = predict_depth_class(year, latitude, longitude, mag, gap)
 
@@ -121,29 +125,68 @@ if predict_button:
     st.write(f"**Kelas Prediksi:** `{y_pred}`")
     st.write(f"**Interpretasi:** {CLASS_MAP[y_pred]}")
 
-    # ===================== PROBABILITAS TEKS =====================
+    # -------------------------
+    # Probabilitas Teks
+    # -------------------------
     if proba is not None:
-        st.subheader("📊 Probabilitas Tiap Kelas")
+        st.subheader("📊 Probabilitas Kelas")
         for i, p in enumerate(proba):
             st.write(f"- **Kelas {i}**: {p*100:.2f}%")
 
-        # ===================== BAR CHART =====================
+        # -------------------------
+        # Grafik Bar Chart Probabilitas
+        # -------------------------
         st.subheader("📉 Grafik Probabilitas")
 
         fig, ax = plt.subplots(figsize=(6, 4))
-        kelas_labels = ["Kelas 0", "Kelas 1", "Kelas 2"]
+        labels = ["Kelas 0", "Kelas 1", "Kelas 2"]
         colors = ["#ff6b6b", "#feca57", "#1dd1a1"]
 
-        ax.bar(kelas_labels, proba, color=colors)
+        ax.bar(labels, proba, color=colors)
         ax.set_ylabel("Probabilitas")
         ax.set_ylim(0, 1)
         ax.set_title("Probabilitas Model untuk Setiap Kelas")
 
-        # Label persen
         for i, p in enumerate(proba):
             ax.text(i, p + 0.02, f"{p*100:.1f}%", ha="center")
 
         st.pyplot(fig)
 
+    # ======================================================
+    # GRAFIK MAGNITUDO SEPANJANG TAHUN
+    # ======================================================
+    st.subheader("📈 Grafik Rata-rata Magnitudo per Tahun")
+
+    if "year" in df_year.columns and "mag" in df_year.columns:
+        df_mag_year = (
+            df_year.groupby("year")["mag"]
+            .mean()
+            .reset_index()
+            .sort_values("year")
+        )
+
+        fig2, ax2 = plt.subplots(figsize=(7, 4))
+        ax2.plot(
+            df_mag_year["year"],
+            df_mag_year["mag"],
+            marker="o",
+            linestyle="-",
+            linewidth=2,
+            color="#3498db"
+        )
+
+        ax2.set_title("Rata-rata Magnitudo Gempa Tiap Tahun")
+        ax2.set_xlabel("Tahun")
+        ax2.set_ylabel("Magnitudo (Mw)")
+        ax2.grid(True, linestyle="--", alpha=0.5)
+
+        for x, yv in zip(df_mag_year["year"], df_mag_year["mag"]):
+            ax2.text(x, yv + 0.03, f"{yv:.2f}", ha="center")
+
+        st.pyplot(fig2)
+
+    else:
+        st.warning("Dataset tidak memiliki kolom year atau mag.")
+
 else:
-    st.info("Isi parameter di sidebar lalu klik **Prediksi Sekarang** untuk melihat hasil.")
+    st.info("Silakan isi parameter di sidebar lalu klik **Prediksi Sekarang**.")
