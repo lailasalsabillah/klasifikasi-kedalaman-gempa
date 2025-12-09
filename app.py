@@ -287,17 +287,17 @@ with tab1:
         explanation = f"""
         Gempa dangkal (< 70 km) memiliki potensi kerusakan yang tinggi karena pusat gempa berada dekat dengan permukaan bumi. 
         Getaran biasanya terasa lebih kuat dan dapat menyebabkan dampak signifikan pada bangunan dan lingkungan sekitar. 
-        Model memprediksi kategori ini dengan tingkat keyakinan {max_proba:.2f}%.
-        """
-        box_color = "#FDECEA"
-        border_color = "#E63946"
+        Model memprediksi kategori ini dengan tingkat keyakinan {max_proba:.2f}%. """
+       
+        box_color = "#E8F8F5"
+        border_color = "#2ECC71"
 
     elif pred == 1:
         explanation = f"""
         Gempa menengah (70–300 km) memiliki dampak yang sedang. Getaran masih terasa, tetapi tidak sekuat gempa dangkal. 
         Karena berada lebih dalam, energi gempa sebagian teredam sebelum mencapai permukaan. 
-        Model memberikan prediksi ini dengan tingkat keyakinan {max_proba:.2f}%.
-        """
+        Model memberikan prediksi ini dengan tingkat keyakinan {max_proba:.2f}%."""
+        
         box_color = "#FFF9DB"
         border_color = "#F1C40F"
 
@@ -305,10 +305,10 @@ with tab1:
         explanation = f"""
         Gempa dalam (> 300 km) umumnya tidak menimbulkan kerusakan besar karena pusat gempa sangat jauh dari permukaan. 
         Energi getaran banyak teredam sebelum mencapai permukaan, sehingga dampaknya lebih kecil. 
-        Model mengkategorikan gempa ini dengan tingkat keyakinan {max_proba:.2f}%.
-        """
-        box_color = "#E8F8F5"
-        border_color = "#2ECC71"
+        Model mengkategorikan gempa ini dengan tingkat keyakinan {max_proba:.2f}%."""
+        
+        box_color = "#FDECEA"
+        border_color = "#E63946"
 
     # ===== TAMPILKAN KOTAK KESIMPULAN (FIXED) =====
     st.markdown(f"""
@@ -326,7 +326,6 @@ with tab1:
         </h3>
         <p style='font-size:17px; color:#1D3557; line-height:1.7; text-align:justify;'>
             {explanation}
-        </p>
     </div>
     """, unsafe_allow_html=True)
 
