@@ -325,7 +325,7 @@ with tab1:
             🧠 Kesimpulan Prediksi
         </h3>
         <p style='font-size:17px; color:#1D3557; line-height:1.7; text-align:justify;'>
-            {explanation} </p>
+            {explanation} 
     </div>
     """, unsafe_allow_html=True)
 
