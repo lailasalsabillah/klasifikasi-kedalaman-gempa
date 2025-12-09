@@ -95,9 +95,9 @@ st.markdown("""
     font-size:18px;
     box-shadow:0px 4px 10px rgba(0,0,0,0.15);
 }
-.badge-0 { background:#E63946; }
+.badge-0 { background:#2ECC71; }
 .badge-1 { background:#F1C40F; color:#333; }
-.badge-2 { background:#2ECC71; }
+.badge-2 { background:#E63946; }
 
 /* Fade In Animation */
 @keyframes fadeIn {
