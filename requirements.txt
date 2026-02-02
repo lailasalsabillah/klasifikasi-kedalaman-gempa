@@ -1,10 +1,11 @@
-numpy
+streamlit>=1.30.0
+protobuf<=3.20.3
+tensorflow==2.15.0
+keras==2.15.0
+numpy<2.0.0
 pandas
 scikit-learn
-xgboost
-tensorflow
-joblib
-streamlit
-plotly
 matplotlib
 seaborn
+plotly
+joblib
